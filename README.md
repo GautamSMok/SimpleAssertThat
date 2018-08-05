@@ -20,6 +20,7 @@ public static int Add(int first,int second)
 Output:
 Passed
 
+
 Example 2:
 void Main()
 {
