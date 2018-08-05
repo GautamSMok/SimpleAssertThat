@@ -1,2 +1,2 @@
 # SimpleAssertThat
-A simple,small Assert.That for assertive test operations
+A Simple, Small Assert.That testing tool for unit testing in your projects.
