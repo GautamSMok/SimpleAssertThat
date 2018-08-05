@@ -1,13 +1,13 @@
 # SimpleAssertThat
 A Simple, Small Assert.That testing tool for unit testing in your projects.
 
-Features:
+#### Features:
 1. Simple
 2. Small Size(less than 10KB)
 3. Test almost every units of your project.
 4. Open source, code can be changes if required.
 
-Example 1:
+## Example 1:
 ```
 void Main()
 {
@@ -19,11 +19,11 @@ public static int Add(int first,int second)
 }
 ```
 
-Output:
+## Output:
 Passed
 
 
-Example 2:
+## Example 2:
 ```
 void Main()
 {
@@ -34,16 +34,17 @@ public static int Add(int first,int second)
 	return first+second+1;//some wrong logic
 }
 ```
-Output:
+## Output:
 Failed: Logic is not as per design
 
 More available Assert.That assertive operators:
-        True,
-        False,
-        Same,
-        NotSame,
-        EqualTo,
-        NotEqualTo,
-        Null,
-        NotNull
- Note: More documenation will be added.
+ __True,
+__False,
+__Same,
+__NotSame,
+__EqualTo,
+__NotEqualTo,
+__Null,
+__NotNull
+ 
+ ### Note: More documenation will be added.
