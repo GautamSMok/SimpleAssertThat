@@ -2,10 +2,11 @@
 A Simple, Small Assert.That testing tool for unit testing in your projects.
 
 #### Features:
-1. Simple
-2. Small Size(less than 10KB)
-3. Test almost every units of your project.
-4. Open source, code can be changed if required.
+1. Simple to use
+2. More readabble unit testing code
+3. Small Size(less than 6KB)
+4. Test almost every units of your project.
+5. Open source, code can be changed if required.
 
 ## Example 1:
 ```
