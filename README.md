@@ -8,6 +8,7 @@ Features:
 4. Open source, code can be changes if required.
 
 Example 1:
+```
 void Main()
 {
 	Assert.That(Add(2,4),Is.EqualTo(6));
@@ -16,12 +17,14 @@ public static int Add(int first,int second)
 {
 	return first+second;
 }
+```
 
 Output:
 Passed
 
 
 Example 2:
+```
 void Main()
 {
 	Assert.That(Add(2,4),Is.EqualTo(6),"Logic is not as per design");
@@ -30,7 +33,7 @@ public static int Add(int first,int second)
 {
 	return first+second+1;//some wrong logic
 }
-
+```
 Output:
 Failed: Logic is not as per design
 
