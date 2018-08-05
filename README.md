@@ -42,4 +42,4 @@ More available Assert.That assertive operators:
         NotEqualTo,
         Null,
         NotNull
-        
+ Note: More documenation will be added.
