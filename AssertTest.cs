@@ -8,201 +8,285 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SimpleAssertThat
 {
-    public enum ConditionName
+    public interface ICondition
     {
-        True,
-        False,
-        Same,
-        NotSame,
-        EqualTo,
-        NotEqualTo,
-        Null,
-        NotNull
-
+        string ConditionName { get; set; }
+        Object ConditionOperandValue { get; set; }
     }
-    public interface IConditionCheck
+
+    public class Is : ICondition
     {
-        ConditionName OperationName { get; set; }
-        object OperatorValue { get; set; }
-        
-    }
-    public class Is : IConditionCheck
-    {
-        public ConditionName OperationName { get; set; }
-        public object OperatorValue { get; set; }
+        public string ConditionName { get; set; }
+        public Object ConditionOperandValue { get; set; }
 
-        
-        public static IConditionCheck True
+        public static Is True
         {
             get
             {
-                var isObj = new Is() { };
-                isObj.OperationName = ConditionName.True;
-                
 
-                return isObj;
-            }
-           
-        }
-
-       
-        public static IConditionCheck False
-        {
-            get
-            {
-                var isObj = new Is() { };
-                isObj.OperationName = ConditionName.False;
+                return GetIsObject("True", true);
 
 
-                return isObj;
             }
 
         }
-
-        public static IConditionCheck Null
+        public static Is False
         {
             get
             {
-                var isObj = new Is() { };
-                isObj.OperationName = ConditionName.Null;
+
+                return GetIsObject("False", false);
 
 
-                return isObj;
+            }
+
+        }
+        public static Is NotNull
+        {
+            get
+            {
+                return GetIsObject("NotNull", null);
+            }
+        }
+        public static Is Null
+        {
+            get
+            {
+
+                return GetIsObject("Null", null);
+
+
             }
 
         }
 
-        public static IConditionCheck NotNull
+        public Is(string conditionName, Object operandValue)
         {
-            get
-            {
-                var isObj = new Is() { };
-                isObj.OperationName = ConditionName.NotNull;
-
-
-                return isObj;
-            }
-
+            this.ConditionName = conditionName;
+            this.ConditionOperandValue = operandValue;
         }
 
-        public static IConditionCheck Same(object o)
+        public static Is EqualTo(object operandValue)
         {
-            var isObj = new Is() { };
-            isObj.OperationName = ConditionName.Same;
-            isObj.OperatorValue = o;
-
-            return isObj;
+            return GetIsObject("EqualTo", operandValue);
+        }
+        public static Is NotEqualTo(object operandValue)
+        {
+            return GetIsObject("NotEqualTo", operandValue);
+        }
+        public static Is SameAs(object operandValue)
+        {
+            return GetIsObject("SameAs", operandValue);
+        }
+        public static Is NotSameAs(object operandValue)
+        {
+            return GetIsObject("NotSameAs", operandValue);
+        }
+        private static Is GetIsObject(string operation, object operandValue)
+        {
+            var obj = new Is(operation, operandValue);
+            return obj;
         }
 
-        public static IConditionCheck NotSame(object o)
-        {
-            var isObj = new Is() { };
-            isObj.OperationName = ConditionName.NotSame;
-            isObj.OperatorValue = o;
-
-            return isObj;
-        }
-        
-        public static IConditionCheck NotEqualTo(object o)
-        {
-            var isObj = new Is() { };
-            isObj.OperationName = ConditionName.NotEqualTo;
-            isObj.OperatorValue = o;
-
-            return isObj;
-        }
-
-        public static IConditionCheck EqualTo(object o)
-        {
-            var isObj = new Is() { };
-            isObj.OperationName = ConditionName.EqualTo;
-            isObj.OperatorValue = o;
-
-            return isObj;
-        }
-
-        
-       
-
-        
     }
     public class Assert
     {
-        static string  conditionText = "";
-
-        static bool testPassed = false;
-
-        static string assertMessage = "";
-       
-        public static void That(object o1, IConditionCheck o2 = null, string msg = "")
+        private static object InvokeMethod(Refl reflection)
         {
-            assertMessage = msg;
-            
-            if (o2.OperationName == ConditionName.True)
-            {
-                testPassed=(bool)o1;
-                
-            }
+            var lst = reflection.ClassName.Split('.').ToList();
+            string className = lst.LastOrDefault();
+            lst.Remove(className);
+            string assemblyName = string.Join(",", lst);
+            string methodName = reflection.Method;
+            object[] parameters = reflection.Parameters;
 
-            else if (o2.OperationName == ConditionName.False)
+            //Console.WriteLine(assemblyName);
+            Type type = null;
+            if (assemblyName != null && assemblyName.Length > 0)
             {
-                testPassed=!(bool)o1 ;
-                
-            }
-
-            else if (o2.OperationName == ConditionName.NotEqualTo)
-            {
-                testPassed = !o1.Equals(o2.OperatorValue);
-            }
-
-            else if (o2.OperationName == ConditionName.EqualTo)
-            {
-                testPassed = o1.Equals(o2.OperatorValue);
-            }
-
-            
-
-            else if (o2.OperationName == ConditionName.Same)
-            {
-                testPassed = RuntimeHelpers.GetHashCode(o1) == RuntimeHelpers.GetHashCode(o2.OperatorValue);
-            }
-            else if (o2.OperationName ==ConditionName.NotSame)
-            {
-                testPassed = RuntimeHelpers.GetHashCode(o1) != RuntimeHelpers.GetHashCode(o2.OperatorValue);
-            }
-            else if (o2.OperationName == ConditionName.Null)
-            {
-                testPassed = o1==null;
-            }
-            else if (o2.OperationName == ConditionName.NotNull)
-            {
-                testPassed = o1 != null;
-            }
-
-            ShowConsoleText();
-            
-        }
-        private static void ShowConsoleText()
-        {
-            string text="";
-            if(testPassed)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                text = "Passed";
+                type = Type.GetType(className + "," + assemblyName);
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                text = "Failed: "+assertMessage;
+                type = Type.GetType(className);
             }
-            
-            Console.WriteLine(text);
+            //Console.WriteLine(type);
+            ConstructorInfo magicConstructor = type.GetConstructor(Type.EmptyTypes);
+            if (magicConstructor != null)
+            {
+                object magicClassObject = magicConstructor.Invoke(new object[] { });
+            }
+
+            MethodInfo method = type.GetMethod(methodName);
+            var instance = magicConstructor != null ? magicConstructor : null;
+
+            object magicValue = method.Invoke(instance, parameters);
+
+            return magicValue;
+        }
+        public static void That(object expression, ICondition condition, string message = "", string testName = "")
+        {
+            var operandOne = expression;
+            Predicate<object> predicate = null;
+
+            if (expression != null && expression.GetType().Name == "Refl")
+            {
+                try
+                {
+                    operandOne = InvokeMethod(((Refl)expression));
+                    //Console.WriteLine(operandOne);
+                }
+                catch (Exception ex)
+                {
+                    //Console.WriteLine(ex.InnerException.Message);
+                    operandOne = ex.InnerException;
+                }
+            }
+
+
+            if (condition.ConditionName == "EqualTo")
+            {
+                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+            }
+            else if (condition.ConditionName == "SameAs")
+            {
+                predicate = (p) => p.GetHashCode() == condition.ConditionOperandValue.GetHashCode();
+            }
+            else if (condition.ConditionName == "NotSameAs")
+            {
+                predicate = (p) => p.GetHashCode() != condition.ConditionOperandValue.GetHashCode();
+            }
+            else if (condition.ConditionName == "NotEqualTo")
+            {
+                predicate = (p) => p.ToString() != condition.ConditionOperandValue.ToString();
+            }
+            else if (condition.ConditionName == "True")
+            {
+                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+            }
+            else if (condition.ConditionName == "False")
+            {
+                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+            }
+            else if (condition.ConditionName == "Null")
+            {
+                predicate = (p) => p == null;
+                condition.ConditionOperandValue = "Null";
+            }
+            else if (condition.ConditionName == "NotNull")
+            {
+                predicate = (p) => p != null;
+                condition.ConditionOperandValue = "NotNull";
+            }
+            else if (condition.ConditionName == "Exception")
+            {
+                //Console.WriteLine(((Exception)operandOne).Message);
+
+
+                predicate = (p) => p is Exception;
+            }
+            else if (condition.ConditionName == "Returns")
+            {
+                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+            }
+            else if (condition.ConditionName == "NotReturn")
+            {
+                predicate = (p) => p.ToString() != condition.ConditionOperandValue.ToString();
+            }
+
+            bool testResult = predicate(operandOne);
+            TestCondition(testResult, message, testName);
+            Console.WriteLine("Expected: " + condition.ConditionOperandValue.ToString());
+            Console.WriteLine("Actual: " + operandOne);
+
+        }
+        private static void TestCondition(bool testPassed, string message = "", string testName = "")
+        {
+
+            if (testPassed)
+            {
+                Show("Passed");
+            }
+            else
+            {
+                Show("Failed" + " " + message);
+
+            }
+        }
+        public static void Show(string result)
+        {
+            Console.WriteLine(result);
         }
     }
+    public class Refl
+    {
+        public string Method { get; private set; }
+        public string ClassName { get; private set; }
+        public object[] Parameters { get; private set; }
+        public Refl MethodName(string methodName)
+        {
+            this.Method = methodName;
+            return this;
+        }
+
+        public Refl InClass(string className)
+        {
+            this.ClassName = className;
+            return this;
+        }
+
+        public Refl WithParameters(params object[] parameters)
+        {
+            this.Parameters = parameters;
+            return this;
+        }
+
+
+    }
+    public class AMethod
+    {
+        public static Refl ByName(string methodName)
+        {
+            Refl reflection = new Refl();
+            reflection.MethodName(methodName);
+
+            return reflection;
+        }
+
+
+    }
+    public class Throws : ICondition
+    {
+        public string ConditionName { get; set; }
+        public Object ConditionOperandValue { get; set; }
+        public Exception Ex { get; set; }
+
+        public static Throws Exception(Exception exception)
+        {
+            return new Throws() { ConditionName = "Exception", Ex = exception };
+        }
+    }
+
+    public class Does : ICondition
+    {
+        public string ConditionName { get; set; }
+        public Object ConditionOperandValue { get; set; }
+
+        public static Is Returns(object operandValue)
+        {
+            return new Is("Returns", operandValue);
+        }
+        public static Is NotReturn(object operandValue)
+        {
+            return new Is("NotReturn", operandValue);
+        }
+    }
+
+    
+
 }
