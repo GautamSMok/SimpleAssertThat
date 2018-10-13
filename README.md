@@ -43,7 +43,7 @@ Failed: Logic is not as per design
 ```
 void Main()
 {
-	Assert.That(AMethod.ByName("GetSubString").WithParameters("Sample").InClass("MyName.Test"), Throws.Exception(),"Method does not throw exception");
+	Assert.That(AMethod.ByName("GetSubString").WithParameters("Sample").InClass("MyName.Test"), Throws.NoException(),"Method does not throw exception");
 }
 public static string GetSubString(string str)
 {
