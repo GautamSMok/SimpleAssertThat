@@ -47,7 +47,7 @@ void Main()
 }
 public static string GetSubString(string str)
 {
-	return "a".Substring(2);
+	return str.Substring(2);
 }
 ```
 ## Output:
