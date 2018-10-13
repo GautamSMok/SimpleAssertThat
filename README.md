@@ -35,8 +35,24 @@ public static int Add(int first,int second)
 	return first+second+1;//some wrong logic
 }
 ```
+
 ## Output:
 Failed: Logic is not as per design
+
+## Example 3:
+```
+void Main()
+{
+	Assert.That(AMethod.ByName("GetSubString").WithParameters("Sample").InClass("MyName.Test"), Throws.Exception(),"Method does not throw exception");
+}
+public static string GetSubString(string str)
+{
+	return "a".Substring(2);
+}
+```
+## Output:
+Passed
+
 ### Assert.That assertive operators:
 1. True,
 2. False,
@@ -46,6 +62,9 @@ Failed: Logic is not as per design
 6. NotEqualTo,
 7. Null,
 8. NotNull
-9. More operators coming soon...
+9. Exception
+10. NoException
+11. Does. Return
+12. Does.NotRetun
  
 ##### Note: More documenation will be added.
