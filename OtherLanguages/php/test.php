@@ -11,7 +11,7 @@
 	,'Hello Test');
 	
 
-Assert.that(someMethod(1,1,1,1,1),Is.equalTo(5));
+Assert::that(someMethod(1,1,1,1,1),Is::equalTo(5));
 
 	class Arithmatic
 	{
