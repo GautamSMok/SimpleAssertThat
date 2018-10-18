@@ -37,10 +37,39 @@ namespace SimpleAssertThat
         HaveAll,
         NotHaveAny,
         NotHaveAll,
+        InOrder,
+        //HasSubstrings,
         Contain,
         NotContain,
         GreaterThan,
+        //GreaterThanOrEqualTo,
+        //LesserThan,
+        //LesserThanOrEqualTo,
+        //NotGreaterThan,
+        //NotGreaterThanOrEqualTo,
+        //NotLesserThan,
+        //NotLesserThanOrEqualTo
+
+        InAscendingOrder,
+        //InDescendingOrder,
         
+
+        //String // types start from here with Is Class
+        //Double
+        //Decimal
+        //Integer
+        //Long
+        //Short
+        //Bit
+        //Float,
+        //Object //*
+        //Array
+        //List
+        //Stack
+        //Queue
+        //Collection
+        //Enumerable
+        //Generic
 
 
     }
@@ -129,6 +158,14 @@ namespace SimpleAssertThat
             }
         }
 
+        public static Is InAscendingOrder
+        {
+            get
+            {
+                return GetIsObject(Operators.InAscendingOrder, null);
+            }
+        }
+
 
         public static Is EqualTo(object operandValue)
         {
@@ -154,6 +191,11 @@ namespace SimpleAssertThat
         public static Is GreaterThan(object operandValue)
         {
             return GetIsObject(Operators.GreaterThan, operandValue);
+        }
+
+        public static Is InOrder(params object[] elements)
+        {
+            return new Is(Operators.InOrder, elements);
         }
 
     }
@@ -236,8 +278,8 @@ namespace SimpleAssertThat
             string assemblyName = string.Join(",", lst);
             string methodName = reflection.Method;
             object[] parameters = reflection.Parameters;
-
             //Console.WriteLine(assemblyName);
+            //Console.WriteLine(reflection.ClassName);
             Type type = null;
             if (assemblyName != null && assemblyName.Length > 0)
             {
@@ -284,7 +326,9 @@ namespace SimpleAssertThat
 
         public static void TestOnlyFirst()
         {
-
+            TotalFailed = 0;
+            TotalPassed = 0;
+            TotalTests = 0;
             onlyFirst = true;
         }
 
@@ -467,10 +511,49 @@ namespace SimpleAssertThat
 
                 };
             }
+            else if (condition.ConditionName == Operators.InOrder)
+            {
+                if(operandOne is ICollection)
+                {
+                   predicate = p => GetList((ICollection)p).SequenceEqual(GetList((ICollection)condition.ConditionOperandValues));
+                }
+                else
+                {
+                    throw new Exception("Not a valid collection");
+                }
+            }
+            else if (condition.ConditionName == Operators.InAscendingOrder)
+            {
+                if (operandOne is ICollection)
+                {
+                    
+                    if(condition.ConditionOperandValue!=null)
+                    {
+                        predicate = p =>
+                        {
+                            condition.ConditionOperandValues = GetList((ICollection)p).OrderBy(x => x).ToArray();
+                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                        };
+                    }
+                    else
+                    {
+                        predicate = p =>
+                        {
+                            condition.ConditionOperandValues = GetList((ICollection)p).OrderBy(x => x).ToArray();
+                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                        };
+                    }
+                }
+                else
+                {
+                    throw new Exception("Not a valid collection");
+                }
+            }
+
             bool testResult = predicate(operandOne);
             TestCondition(testResult, message, testName);
 
-            if (!testResult)
+            if (true)//!testResult
             {
                 if (condition.ConditionOperandValue != null)
                 {
@@ -502,6 +585,18 @@ namespace SimpleAssertThat
 
             }
 
+        }
+
+        private static IEnumerable<object> GetList(ICollection collection)
+        {
+            List<object> lst = new List<object>();
+
+            foreach(var el in collection)
+            {
+                lst.Add(el);
+            }
+
+            return lst;
         }
 
         private static string GetListString(ICollection collection)
@@ -605,18 +700,24 @@ namespace SimpleAssertThat
 
             if (testPassed)
             {
-                Show("Passed");
+                Show("Passed","");
                 TotalPassed++;
             }
             else
             {
-                Show("Failed" + " " + message);
+                Show("Failed" , message);
                 TotalFailed++;
             }
         }
-        public static void Show(string result)
+        public static void Show(string result,string message)
         {
-            Console.WriteLine(result);
+            string textToDisplay = result;
+            if (!string.IsNullOrEmpty(message))
+            {
+                textToDisplay += " : (m) - " + message;
+            }
+            textToDisplay += " : (i) - ";
+            Console.Write(textToDisplay);
         }
 
         public static void Summary()
@@ -691,7 +792,7 @@ namespace SimpleAssertThat
         public Operators ConditionName { get; set; }
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
-        public static Is Returns(object operandValue)
+        public static Is Return(object operandValue)
         {
             return new Is(Operators.Return, operandValue);
         }
@@ -723,6 +824,7 @@ namespace SimpleAssertThat
         {
             return new Is(Operators.NotContain, elements);
         }
+       
     }
 
 
