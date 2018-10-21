@@ -89,6 +89,8 @@ namespace SimpleAssertThat
 
         RegexMatch,
         NoRegexMatch,
+        Numeric,
+        NotNumeric,
 
 
     }
@@ -190,7 +192,20 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.NotInteger, null);
             }
         }
-
+        public static Is Numeric
+        {
+            get
+            {
+                return GetIsObject(Operators.Numeric, null);
+            }
+        }
+        public static Is NotNumeric
+        {
+            get
+            {
+                return GetIsObject(Operators.NotNumeric, null);
+            }
+        }
 
         public static Is NotString
         {
@@ -366,6 +381,7 @@ namespace SimpleAssertThat
         {
             return GetIsObject(Operators.NotOfType, t);
         }
+
     }
 
     public class Predicates
@@ -931,6 +947,16 @@ namespace SimpleAssertThat
                     return p.GetType() != typeof(System.Int32) && p.GetType() != typeof(System.Int16) && p.GetType() != typeof(System.Int64);
                 };
             }
+            else if(condition.ConditionName==Operators.Numeric)
+            {
+                var regex = GetNumericRegexPattern();
+                predicate = (p) => regex.Match(operandOne.ToString()).Success;
+            }
+            else if (condition.ConditionName == Operators.NotNumeric)
+            {
+                var regex = GetNumericRegexPattern();
+                predicate = (p) => !regex.Match(operandOne.ToString()).Success;
+            }
 
 #endregion
 
@@ -1008,7 +1034,10 @@ namespace SimpleAssertThat
 
             return testResult;
         }
-
+        private static Regex GetNumericRegexPattern()
+        {
+            return new Regex(@"^-?[0-9][0-9,\.]+$");
+        }
         private static string GetActualDisplay(ICondition condition,object operandOne)
         {
             string actualResult = "";
