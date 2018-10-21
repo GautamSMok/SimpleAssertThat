@@ -61,22 +61,20 @@ Passed
 5. Is.EqualTo,
 6. Is.NotEqualTo,
 7. Is.Null,
-8. Is.NotNull
-9. Does.HaveAny
-10.Does.NoHaveAll
-11.Does.Return
-12.Does.NotRetun
-13.Does.Contain,
-14.Is.Numeric,
-15.Is.ValueType
-16.Is.Array
-17.Is.Generic
-18.Does.RegexMatch
-19.Does.NoRegexMatch
-.
-.
-.
-49. Throws.Exception
-50. Throws.NoException
- 
+8. Is.NotNull,
+9. Does.HaveAny,
+10. Does.NoHaveAll,
+11. Does.Return,
+12. Does.NotRetun,
+13. Does.Contain,
+14. Is.Numeric,
+15. Is.ValueType,
+16. Is.Array,
+17. Is.Generic,
+18. Does.RegexMatch,
+19. Does.NoRegexMatch,
+20. Throws.Exception,
+21. Throws.NoException,
+22. and many more
+
 ##### Note: More documenation will be added.
