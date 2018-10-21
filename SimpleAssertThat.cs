@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SimpleAssertThat
@@ -85,6 +86,9 @@ namespace SimpleAssertThat
         //Enumerable
         Generic,
         NotGeneric,
+
+        RegexMatch,
+        NoRegexMatch,
 
 
     }
@@ -914,6 +918,24 @@ namespace SimpleAssertThat
 
 #endregion
 
+            #region Regex
+            else if(condition.ConditionName==Operators.RegexMatch)
+            {
+                predicate = (p) => {
+                    Match match = Regex.Match(p.ToString(), condition.ConditionOperandValue.ToString());
+                    return match.Success;
+                };
+            }
+            else if (condition.ConditionName == Operators.NoRegexMatch)
+            {
+                predicate = (p) =>
+                {
+                    Match match = Regex.Match(p.ToString(), condition.ConditionOperandValue.ToString());
+                    return !match.Success;
+                };
+            }
+            #endregion
+
             bool testResult = predicate(operandOne);
 
             #region ShowResults
@@ -1280,7 +1302,14 @@ namespace SimpleAssertThat
             return new Is(Operators.NotContain, elements);
         }
 
-       
+        public static Is RegexMatch(string pattern)
+        {
+            return new Is(Operators.RegexMatch,pattern);
+        }
+        public static Is NoRegexMatch(string pattern)
+        {
+            return new Is(Operators.NoRegexMatch, pattern);
+        }
        
     }
 
