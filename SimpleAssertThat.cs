@@ -45,6 +45,12 @@ namespace SimpleAssertThat
         GreaterThanOrEqualTo,
         LesserThan,
         NotLesserThan,
+        Zero,
+        NotZero,
+        OfType,
+        NotOfType,
+        ValueType,
+        NotValueType,
         //LesserThanOrEqualTo,
         //NotGreaterThan,
         //NotGreaterThanOrEqualTo,
@@ -55,22 +61,30 @@ namespace SimpleAssertThat
         InDescendingOrder,
         
 
-        //String // types start from here with Is Class
+        String,
+        NotString,
         //Double
         //Decimal
-        //Integer
+        Boolean,
+        NotBoolean,
+        //Char,
+        //NotChar,
+        Integer,
+        NotInteger,
         //Long
         //Short
         //Bit
         //Float,
         //Object //*
-        //Array
+        Array,
+        NotArray,
         //List
         //Stack
         //Queue
         //Collection
         //Enumerable
-        //Generic
+        Generic,
+        NotGeneric,
 
 
     }
@@ -102,19 +116,94 @@ namespace SimpleAssertThat
             this.ConditionOperandValues = operandValues;
         }
 
+        public static Is Zero
+        {
+            get
+            {
+                return GetIsObject(Operators.Zero, true);
+            }
+        }
+        public static Is Boolean
+        {
+            get
+            {
+                return GetIsObject(Operators.Boolean, null);
+            }
+        }
+        public static Is ValueType
+        {
+            get
+            {
+                return GetIsObject(Operators.ValueType, null);
+            }
+        }
+        public static Is NotValueType
+        {
+            get
+            {
+                return GetIsObject(Operators.NotValueType, null);
+            }
+        }
+        public static Is NotBoolean
+        {
+            get
+            {
+                return GetIsObject(Operators.NotBoolean, null);
+            }
+        }
+        public static Is String
+        {
+            get
+            {
+                return GetIsObject(Operators.String, null);
+            }
+        }
+        public static Is Array
+        {
+            get
+            {
+                return GetIsObject(Operators.Array, null);
+            }
+        }
+        public static Is NotArray
+        {
+            get
+            {
+                return GetIsObject(Operators.NotArray, null);
+            }
+        }
+        public static Is Integer
+        {
+            get
+            {
+                return GetIsObject(Operators.Integer, null);
+            }
+        }
 
+        public static Is NotString
+        {
+            get
+            {
+                return GetIsObject(Operators.NotString, null);
+            }
+        }
+
+        public static Is NotZero
+        {
+            get
+            {
+                return GetIsObject(Operators.NotZero, true);
+            }
+        }
 
         public static Is True
         {
             get
             {
-
                 return GetIsObject(Operators.True, true);
-
-
             }
-
         }
+
         public static Is False
         {
             get
@@ -126,6 +215,7 @@ namespace SimpleAssertThat
             }
 
         }
+        
         public static Is NotNull
         {
             get
@@ -133,6 +223,7 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.NotNull, null);
             }
         }
+        
         public static Is Null
         {
             get
@@ -144,6 +235,7 @@ namespace SimpleAssertThat
             }
 
         }
+        
         public static Is Empty
         {
             get
@@ -151,6 +243,7 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.Empty, null);
             }
         }
+        
         public static Is NotEmpty
         {
             get
@@ -175,6 +268,20 @@ namespace SimpleAssertThat
             }
         }
 
+        public static Is Generic
+        {
+            get
+            {
+                return GetIsObject(Operators.Generic, null);
+            }
+        }
+        public static Is NotGeneric
+        {
+            get
+            {
+                return GetIsObject(Operators.NotGeneric, null);
+            }
+        }
 
         public static Is EqualTo(object operandValue)
         {
@@ -224,6 +331,29 @@ namespace SimpleAssertThat
             return new Is(Operators.InOrder, elements);
         }
 
+        public static Is OfType(string type)
+        {
+            
+            var s=Type.GetType(type,true);
+            return GetIsObject(Operators.OfType, s);
+        }
+
+        public static Is OfType(Type t)
+        {
+            return GetIsObject(Operators.OfType, t);
+        }
+
+        public static Is NotOfType(string type)
+        {
+
+            var s = Type.GetType(type, true);
+            return GetIsObject(Operators.NotOfType, s);
+        }
+
+        public static Is NotOfType(Type t)
+        {
+            return GetIsObject(Operators.NotOfType, t);
+        }
     }
 
     public class Predicates
@@ -350,7 +480,7 @@ namespace SimpleAssertThat
         }
 
 
-        public static void Reset()
+        private static void Reset()
         {
             TotalFailed = 0;
             TotalPassed = 0;
@@ -371,17 +501,34 @@ namespace SimpleAssertThat
             That(expression, null, message, testName);
         }
 
-        public static void That(object expression, ICondition condition, string message = "", string testName = "")
+        public static bool That(object expression, ICondition condition, string message = "", string testName = "")
         {
-
-            #region Validations
+            bool proceed = false;
             if (onlyFirst && TotalTests == 1)
             {
-                return;
+                return false;
+            }
+            else
+            {
+                proceed = true;
             }
 
-            var operandOne = expression;
+            bool testResult = proceed ? GetTestResult(expression, condition, message, testName) : false;
+
+
+           
+
+           return testResult;
+
+        }
+
+        private static bool GetTestResult(object expression, ICondition condition, string message = "", string testName = "")
+        {
+            
+            #region Validations
             Predicate<object> predicate = null;
+            var operandOne = expression;
+
             TotalTests++;
             if (condition == null)
             {
@@ -391,7 +538,7 @@ namespace SimpleAssertThat
             if (expression == null && (condition.ConditionName != Operators.Null && condition.ConditionName != Operators.NotNull))
             {
                 TestCondition(false, "Invalid test");
-                return;
+                return false;
             }
 
 
@@ -424,7 +571,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString());
             }
-            else if(condition.ConditionName==Operators.GreaterThanOrEqualTo)
+            else if (condition.ConditionName == Operators.GreaterThanOrEqualTo)
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString());
             }
@@ -466,6 +613,17 @@ namespace SimpleAssertThat
                 predicate = (p) => p != null;
                 condition.ConditionOperandValue = "NotNull";
             }
+            else if(condition.ConditionName==Operators.Zero)
+            {
+                predicate = (p) => (int)p == 0;
+                condition.ConditionOperandValue = "Zero";
+            }
+            else if (condition.ConditionName == Operators.NotZero)
+            {
+                predicate = (p) => (int)p != 0;
+                condition.ConditionOperandValue = "NotZero";
+            }
+           
             #endregion
 
             #region Exceptions
@@ -495,7 +653,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => p.ToString() != condition.ConditionOperandValue.ToString();
             }
-            
+
             #endregion
 
             #region Have
@@ -590,9 +748,9 @@ namespace SimpleAssertThat
             #region Order
             else if (condition.ConditionName == Operators.InOrder)
             {
-                if(operandOne is ICollection)
+                if (operandOne is ICollection)
                 {
-                   predicate = p => GetList((ICollection)p).SequenceEqual(GetList((ICollection)condition.ConditionOperandValues));
+                    predicate = p => GetList((ICollection)p).SequenceEqual(GetList((ICollection)condition.ConditionOperandValues));
                 }
                 else
                 {
@@ -603,8 +761,8 @@ namespace SimpleAssertThat
             {
                 if (operandOne is ICollection)
                 {
-                    
-                    if(condition.ConditionOperandValue!=null)
+
+                    if (condition.ConditionOperandValue != null)
                     {
                         predicate = p =>
                         {
@@ -656,17 +814,117 @@ namespace SimpleAssertThat
             }
             #endregion
 
+            #region TypeChecks
+            else if (condition.ConditionName == Operators.OfType)
+            {
+                predicate = (p) => ((Type)(condition.ConditionOperandValue)).IsAssignableFrom(p.GetType());
+            }
+            else if (condition.ConditionName == Operators.NotOfType)
+            {
+                predicate = (p) => !((Type)(condition.ConditionOperandValue)).IsAssignableFrom(p.GetType());
+            }
+            else if(condition.ConditionName == Operators.Generic)
+            {
+                predicate = (p) => {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType().IsGenericType;
+                };
+                
+            }
+            else if(condition.ConditionName == Operators.NotGeneric)
+            {
+                 predicate = (p) => {
+                    condition.ConditionOperandValue = p.GetType();
+                    return !p.GetType().IsGenericType;
+                };
+            }
+            else if (condition.ConditionName == Operators.Array)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType().IsArray;
+                };
+            }
+            else if (condition.ConditionName == Operators.NotArray)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return !p.GetType().IsArray;
+                };
+            }
+
+            else if(condition.ConditionName==Operators.String)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType() == typeof(System.String);
+                };
+            }
+            else if (condition.ConditionName == Operators.NotString)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType() != typeof(System.String);
+                };
+            }
+            else if(condition.ConditionName==Operators.Boolean)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType() == typeof(System.Boolean);
+                };
+            }
+            else if (condition.ConditionName == Operators.NotBoolean)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType() != typeof(System.Boolean);
+                };
+            }
+            else if(condition.ConditionName==Operators.ValueType)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType().IsValueType;
+                };
+            }
+            else if (condition.ConditionName == Operators.NotValueType)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return !p.GetType().IsValueType;
+                };
+            }
+            else if(condition.ConditionName==Operators.Integer)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType()==typeof(System.Int32);
+                };
+            }
+
+#endregion
+
             bool testResult = predicate(operandOne);
 
             #region ShowResults
             TestCondition(testResult, message, testName);
-            
+
             if (true)//!testResult
             {
 
                 Console.Write("Expected : ");
 
-             
+
 
                 string actualResult = "";
 
@@ -710,7 +968,9 @@ namespace SimpleAssertThat
             }
             #endregion
 
+            return testResult;
         }
+
         private static string GetActualDisplay(ICondition condition,object operandOne)
         {
             string actualResult = "";
@@ -895,6 +1155,7 @@ namespace SimpleAssertThat
         public static void Summary()
         {
             Console.WriteLine("Total Test : " + TotalTests + " Passed : " + TotalPassed + " Failed : " + TotalFailed);
+            Reset();
         }
     }
 
