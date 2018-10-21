@@ -183,6 +183,14 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.Integer, null);
             }
         }
+        public static Is NotInteger
+        {
+            get
+            {
+                return GetIsObject(Operators.NotInteger, null);
+            }
+        }
+
 
         public static Is NotString
         {
@@ -912,7 +920,15 @@ namespace SimpleAssertThat
                 predicate = (p) =>
                 {
                     condition.ConditionOperandValue = p.GetType();
-                    return p.GetType()==typeof(System.Int32);
+                    return p.GetType() == typeof(System.Int32) || p.GetType() == typeof(System.Int16) || p.GetType() == typeof(System.Int64);
+                };
+            }
+            else if (condition.ConditionName == Operators.NotInteger)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType() != typeof(System.Int32) && p.GetType() != typeof(System.Int16) && p.GetType() != typeof(System.Int64);
                 };
             }
 
