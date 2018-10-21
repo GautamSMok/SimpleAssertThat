@@ -1,5 +1,5 @@
 # SimpleAssertThat
-A Simple, Small Assert.That testing tool for unit testing in your projects.
+A Simple, Small Assert.That unit testing tool for .Net projects.
 
 #### Features:
 1. Simple to use
@@ -54,17 +54,29 @@ public static string GetSubString(string str)
 Passed
 
 ### Assert.That assertive operators:
-1. True,
-2. False,
-3. Same,
-4. NotSame,
-5. EqualTo,
-6. NotEqualTo,
-7. Null,
-8. NotNull
-9. Exception
-10. NoException
-11. Does. Return
-12. Does.NotRetun
+1. Is.True,
+2. Is.False,
+3. Is.SameAs,
+4. Is.NotSameAs,
+5. Is.EqualTo,
+6. Is.NotEqualTo,
+7. Is.Null,
+8. Is.NotNull
+9. Does.HaveAny
+10.Does.NoHaveAll
+11.Does.Return
+12.Does.NotRetun
+13.Does.Contain,
+14.Is.Numeric,
+15.Is.ValueType
+16.Is.Array
+17.Is.Generic
+18.Does.RegexMatch
+19.Does.NoRegexMatch
+.
+.
+.
+49. Throws.Exception
+50. Throws.NoException
  
 ##### Note: More documenation will be added.
