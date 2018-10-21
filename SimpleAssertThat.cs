@@ -91,6 +91,8 @@ namespace SimpleAssertThat
         NoRegexMatch,
         Numeric,
         NotNumeric,
+        HaveSize,
+        NotHaveSize,
 
 
     }
@@ -449,9 +451,9 @@ namespace SimpleAssertThat
     public class Assert
     {
 
-        public static int TotalTests = 0;
-        public static int TotalFailed = 0;
-        public static int TotalPassed = 0;
+        private static int TotalTests = 0;
+        private static int TotalFailed = 0;
+        private static int TotalPassed = 0;
         private static bool onlyFirst = false;
 
         private static object InvokeMethod(Refl reflection)
@@ -507,8 +509,16 @@ namespace SimpleAssertThat
             return null;
         }
 
+        public static int GetTotalPassedCount()
+        {
+            return TotalPassed;
+        }
+        public static int GetTotalFailed()
+        {
+            return TotalFailed;
+        }
 
-        private static void Reset()
+        public static void Reset()
         {
             TotalFailed = 0;
             TotalPassed = 0;
@@ -524,9 +534,19 @@ namespace SimpleAssertThat
             onlyFirst = true;
         }
 
+        public static void That(object expression, string testName)
+        {
+            That(expression, null, "", testName);
+        }
+
         public static void That(object expression, string message = "", string testName = "")
         {
             That(expression, null, message, testName);
+        }
+
+        public static void That(object expression, ICondition condition, string testName)
+        {
+            That(expression, condition, "", testName);
         }
 
         public static bool That(object expression, ICondition condition, string message = "", string testName = "")
@@ -771,6 +791,14 @@ namespace SimpleAssertThat
 
                 };
             }
+            else if(condition.ConditionName==Operators.HaveSize)
+            {
+                predicate = (p) => IsOfSize(p, condition.ConditionOperandValue);
+            }
+            else if (condition.ConditionName == Operators.NotHaveSize)
+            {
+                predicate = (p) => !IsOfSize(p, condition.ConditionOperandValue);
+            }
             #endregion
 
             #region Order
@@ -949,13 +977,23 @@ namespace SimpleAssertThat
             }
             else if(condition.ConditionName==Operators.Numeric)
             {
+                
                 var regex = GetNumericRegexPattern();
-                predicate = (p) => regex.Match(operandOne.ToString()).Success;
+                predicate = (p) =>
+                {
+                    var res = regex.Match(operandOne.ToString()).Success;
+                    condition.ConditionOperandValue = res.ToString();
+                    return res;
+                };
             }
             else if (condition.ConditionName == Operators.NotNumeric)
             {
                 var regex = GetNumericRegexPattern();
-                predicate = (p) => !regex.Match(operandOne.ToString()).Success;
+                predicate = (p) => {
+                    var res = regex.Match(operandOne.ToString()).Success;
+                    condition.ConditionOperandValue = res.ToString();
+                    return !res;
+                };
             }
 
 #endregion
@@ -1033,6 +1071,25 @@ namespace SimpleAssertThat
             #endregion
 
             return testResult;
+        }
+        private static bool IsOfSize(object operand,object sizeObject)
+        {
+            int size = (int)sizeObject;
+             
+            if(operand is ICollection)
+            {
+                return ((ICollection)operand).Count == size;
+            }
+            else if(operand is Array)
+            {
+                return ((Array)operand).Length == size;
+            }
+            else if(operand is String)
+            {
+                return ((String)operand).Length == size;
+            }
+           
+            return false;
         }
         private static Regex GetNumericRegexPattern()
         {
@@ -1199,18 +1256,22 @@ namespace SimpleAssertThat
 
             if (testPassed)
             {
-                Show("Passed","");
+                Show("Passed",testName,"");
                 TotalPassed++;
             }
             else
             {
-                Show("Failed" , message);
+                Show("Failed" ,testName, message);
                 TotalFailed++;
             }
         }
-        public static void Show(string result,string message)
+        public static void Show(string result,string testName,string message)
         {
             string textToDisplay = result;
+            if(!string.IsNullOrEmpty(testName))
+            {
+                textToDisplay += " : (n) - " + testName;
+            }
             if (!string.IsNullOrEmpty(message))
             {
                 textToDisplay += " : (m) - " + message;
@@ -1355,7 +1416,16 @@ namespace SimpleAssertThat
         {
             return new Is(Operators.NoRegexMatch, pattern);
         }
-       
+
+
+        public static Is HaveSize(int size)
+        {
+            return new Is(Operators.HaveSize, size);
+        }
+        public static Is NotHaveSize(int size)
+        {
+            return new Is(Operators.NotHaveSize, size);
+        }
     }
 
 
