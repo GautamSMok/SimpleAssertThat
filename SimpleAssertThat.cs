@@ -93,7 +93,7 @@ namespace SimpleAssertThat
         NotNumeric,
         HaveSize,
         NotHaveSize,
-
+				Between,
 
     }
 
@@ -382,6 +382,12 @@ namespace SimpleAssertThat
         public static Is NotOfType(Type t)
         {
             return GetIsObject(Operators.NotOfType, t);
+        }       
+        
+        public static Is Between(object from, object to)
+        {
+        	object[] fromTo=new object[2]{from, to};
+        	return new Is(Operators.Between,fromTo);
         }
 
     }
@@ -638,6 +644,16 @@ namespace SimpleAssertThat
             else if (condition.ConditionName == Operators.NotSameAs)
             {
                 predicate = (p) => p.GetHashCode() != condition.ConditionOperandValue.GetHashCode();
+            }                                  
+            else if(condition.ConditionName==Operators.Between)
+            {            	
+            	  decimal from=decimal.Parse(condition.ConditionOperandValues[0].ToString());
+            	  decimal to=decimal.Parse(condition.ConditionOperandValues[1].ToString());
+            	 
+            	  predicate=(p)=>{
+            	 	decimal	decValue=decimal.Parse(p.ToString());
+            	 	return decValue>=from && decValue<=to;
+            	 };
             }
             else if (condition.ConditionName == Operators.NotEqualTo)
             {
