@@ -53,30 +53,18 @@ namespace SimpleAssertThat
         NotOfType,
         ValueType,
         NotValueType,
+        ObjectType,
+        NotObjectType,
         InAscendingOrder,
         InDescendingOrder,
         String,
         NotString,
-        //Double
-        //Decimal
         Boolean,
         NotBoolean,
-        //Char,
-        //NotChar,
         Integer,
         NotInteger,
-        //Long
-        //Short
-        //Bit
-        //Float,
-        //Object //*
         Array,
         NotArray,
-        //List
-        //Stack
-        //Queue
-        //Collection
-        //Enumerable
         Generic,
         NotGeneric,
         RegexMatch,
@@ -85,7 +73,7 @@ namespace SimpleAssertThat
         NotNumeric,
         HaveSize,
         NotHaveSize,
-				Between,
+	Between,
 
     }
 
@@ -143,6 +131,20 @@ namespace SimpleAssertThat
             {
                 return GetIsObject(Operators.NotValueType, null);
             }
+        }
+        public static Is ObjectType
+        {
+        	get
+        	{
+        		return GetIsObject(Operators.ObjectType,null);
+        	}
+        }                                                 
+        public static Is NotObjectType
+        {
+        	get
+        	{
+        		return GetIsObject(Operators.NotObjectType,null);
+        	}
         }
         public static Is NotBoolean
         {
@@ -382,6 +384,8 @@ namespace SimpleAssertThat
             var s = Type.GetType(type, true);
             return GetIsObject(Operators.NotOfType, s);
         }
+        
+       
 
         public static Is NotOfType(Type t)
         {
@@ -981,6 +985,22 @@ namespace SimpleAssertThat
                 {
                     condition.ConditionOperandValue = p.GetType();
                     return p.GetType().IsValueType;
+                };
+            }
+            else if(condition.ConditionName == Operators.ObjectType)
+            {
+            	  predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType().BaseType == typeof(Object);
+                };
+            }
+            else if(condition.ConditionName == Operators.NotObjectType)
+            {
+            	  predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = p.GetType();
+                    return p.GetType().BaseType != typeof(Object);
                 };
             }
             else if (condition.ConditionName == Operators.NotValueType)
