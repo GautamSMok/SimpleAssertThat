@@ -6,14 +6,12 @@
  */
 
 using System;
-using System.Collections;
+using System.Collections;      
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
 namespace SimpleAssertThat
 {
 
@@ -44,24 +42,19 @@ namespace SimpleAssertThat
         GreaterThan,
         NotGreaterThan,
         GreaterThanOrEqualTo,
+        NotGreaterThanOrEqualTo,
         LesserThan,
         NotLesserThan,
+        LesserThanOrEqualTo,
+        NotLesserThanOrEqualTo,
         Zero,
         NotZero,
         OfType,
         NotOfType,
         ValueType,
         NotValueType,
-        //LesserThanOrEqualTo,
-        //NotGreaterThan,
-        //NotGreaterThanOrEqualTo,
-        //NotLesserThan,
-        //NotLesserThanOrEqualTo
-
         InAscendingOrder,
         InDescendingOrder,
-        
-
         String,
         NotString,
         //Double
@@ -86,7 +79,6 @@ namespace SimpleAssertThat
         //Enumerable
         Generic,
         NotGeneric,
-
         RegexMatch,
         NoRegexMatch,
         Numeric,
@@ -341,6 +333,10 @@ namespace SimpleAssertThat
         public static Is GreaterThanOrEqualTo(object operandValue)
         {
             return GetIsObject(Operators.GreaterThanOrEqualTo, operandValue);
+        }                       
+        public static Is NotGreaterThanOrEqualTo(object operandValue)
+        {	
+					 return GetIsObject(Operators.NotGreaterThanOrEqualTo, operandValue);        	
         }
 
         public static Is NotGreaterThan(object operandValue)
@@ -350,6 +346,14 @@ namespace SimpleAssertThat
         public static Is NotLesserThan(object operandValue)
         {
             return GetIsObject(Operators.NotLesserThan, operandValue);
+        }                   
+        public static Is LesserThanOrEqualTo(object operandValue)
+        {
+						return GetIsObject(Operators.LesserThanOrEqualTo, operandValue);        	
+        }                     
+        public static Is NotLesserThanOrEqualTo(object operandValue)
+        {
+						return GetIsObject(Operators.NotLesserThanOrEqualTo, operandValue);        	        	
         }
         public static Is LesserThan(object operandValue)
         {
@@ -628,10 +632,22 @@ namespace SimpleAssertThat
             else if (condition.ConditionName == Operators.GreaterThanOrEqualTo)
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString());
+            }                                                  
+            else if(condition.ConditionName==Operators.NotGreaterThanOrEqualTo)
+            {
+            	predicate = (p) => !(Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString()));	
             }
             else if (condition.ConditionName == Operators.LesserThan)
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) < Decimal.Parse(condition.ConditionOperandValue.ToString());
+            } 
+            else if(condition.ConditionName == Operators.LesserThanOrEqualTo)
+            {
+            	predicate = (p) => Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString());	
+            }
+            else if(condition.ConditionName == Operators.NotLesserThanOrEqualTo)
+            {
+            	predicate = (p) => !(Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString()));		
             }
             else if (condition.ConditionName == Operators.NotLesserThan)
             {
