@@ -63,7 +63,7 @@ Passed
 7. Is.Null,
 8. Is.NotNull,
 9. Does.HaveAny,
-10. Does.NoHaveAll,
+10. Does.NotHaveAll,
 11. Does.Return,
 12. Does.NotRetun,
 13. Does.Contain,
