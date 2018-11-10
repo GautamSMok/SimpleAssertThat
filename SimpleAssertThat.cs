@@ -368,8 +368,14 @@ namespace SimpleAssertThat
 
         public static Is OfType(string type)
         {
-            
-            var s=Type.GetType(type,true);
+            var sysFriendlyType=GetSystemType(type);
+
+            if(sysFriendlyType==null)
+            {
+                throw new Exception("Type is not understandable");
+            }
+
+            var s = Type.GetType(sysFriendlyType, true);
             return GetIsObject(Operators.OfType, s);
         }
 
@@ -380,12 +386,25 @@ namespace SimpleAssertThat
 
         public static Is NotOfType(string type)
         {
+            var sysFriendlyType = GetSystemType(type);
 
-            var s = Type.GetType(type, true);
+            if (sysFriendlyType == null)
+            {
+                throw new Exception("Type is not understandable");
+            }
+            var s = Type.GetType(sysFriendlyType, true);
             return GetIsObject(Operators.NotOfType, s);
         }
         
-       
+        private static string GetSystemType(string type)
+        {
+            var s = Type.GetType(type.StartsWith("System.") ? type : "System." + type);
+            if(s==null)
+            {
+                return null;
+            }
+            return s.ToString();
+        }
 
         public static Is NotOfType(Type t)
         {
