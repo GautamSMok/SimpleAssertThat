@@ -1,12 +1,12 @@
-  /*
-  Name: SimpleAssertThat 
-  Description: A Simple, Small Assert.That testing tool for unit testing in your projects.
-  Author: Gautam Mokal (gautammokal@live.com)
-  Please do not remove these comments.
- */
+/*
+Name: SimpleAssertThat 
+Description: A Simple, Small Assert.That testing tool for unit testing in your projects.
+Author: Gautam Mokal (gautammokal@live.com)
+Please do not remove these comments.
+*/
 
 using System;
-using System.Collections;      
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -62,6 +62,7 @@ namespace SimpleAssertThat
         Boolean,
         NotBoolean,
         Integer,
+        Date,
         NotInteger,
         Array,
         NotArray,
@@ -73,7 +74,7 @@ namespace SimpleAssertThat
         NotNumeric,
         HaveSize,
         NotHaveSize,
-	Between,
+        Between,
 
     }
 
@@ -111,6 +112,15 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.Zero, true);
             }
         }
+
+        public static Is Date
+        {
+            get
+            {
+                return GetIsObject(Operators.Date, true);
+            }
+        }
+
         public static Is Boolean
         {
             get
@@ -134,17 +144,17 @@ namespace SimpleAssertThat
         }
         public static Is ObjectType
         {
-        	get
-        	{
-        		return GetIsObject(Operators.ObjectType,null);
-        	}
-        }                                                 
+            get
+            {
+                return GetIsObject(Operators.ObjectType, null);
+            }
+        }
         public static Is NotObjectType
         {
-        	get
-        	{
-        		return GetIsObject(Operators.NotObjectType,null);
-        	}
+            get
+            {
+                return GetIsObject(Operators.NotObjectType, null);
+            }
         }
         public static Is NotBoolean
         {
@@ -238,7 +248,7 @@ namespace SimpleAssertThat
             }
 
         }
-        
+
         public static Is NotNull
         {
             get
@@ -246,7 +256,7 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.NotNull, null);
             }
         }
-        
+
         public static Is Null
         {
             get
@@ -258,7 +268,7 @@ namespace SimpleAssertThat
             }
 
         }
-        
+
         public static Is Empty
         {
             get
@@ -266,7 +276,7 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.Empty, null);
             }
         }
-        
+
         public static Is NotEmpty
         {
             get
@@ -335,10 +345,10 @@ namespace SimpleAssertThat
         public static Is GreaterThanOrEqualTo(object operandValue)
         {
             return GetIsObject(Operators.GreaterThanOrEqualTo, operandValue);
-        }                       
+        }
         public static Is NotGreaterThanOrEqualTo(object operandValue)
-        {	
-					 return GetIsObject(Operators.NotGreaterThanOrEqualTo, operandValue);        	
+        {
+            return GetIsObject(Operators.NotGreaterThanOrEqualTo, operandValue);
         }
 
         public static Is NotGreaterThan(object operandValue)
@@ -348,14 +358,14 @@ namespace SimpleAssertThat
         public static Is NotLesserThan(object operandValue)
         {
             return GetIsObject(Operators.NotLesserThan, operandValue);
-        }                   
+        }
         public static Is LesserThanOrEqualTo(object operandValue)
         {
-						return GetIsObject(Operators.LesserThanOrEqualTo, operandValue);        	
-        }                     
+            return GetIsObject(Operators.LesserThanOrEqualTo, operandValue);
+        }
         public static Is NotLesserThanOrEqualTo(object operandValue)
         {
-						return GetIsObject(Operators.NotLesserThanOrEqualTo, operandValue);        	        	
+            return GetIsObject(Operators.NotLesserThanOrEqualTo, operandValue);
         }
         public static Is LesserThan(object operandValue)
         {
@@ -368,9 +378,9 @@ namespace SimpleAssertThat
 
         public static Is OfType(string type)
         {
-            var sysFriendlyType=GetSystemType(type);
+            var sysFriendlyType = GetSystemType(type);
 
-            if(sysFriendlyType==null)
+            if (sysFriendlyType == null)
             {
                 throw new Exception("Type is not understandable");
             }
@@ -395,11 +405,11 @@ namespace SimpleAssertThat
             var s = Type.GetType(sysFriendlyType, true);
             return GetIsObject(Operators.NotOfType, s);
         }
-        
+
         private static string GetSystemType(string type)
         {
             var s = Type.GetType(type.StartsWith("System.") ? type : "System." + type);
-            if(s==null)
+            if (s == null)
             {
                 return null;
             }
@@ -409,12 +419,12 @@ namespace SimpleAssertThat
         public static Is NotOfType(Type t)
         {
             return GetIsObject(Operators.NotOfType, t);
-        }       
-        
+        }
+
         public static Is Between(object from, object to)
         {
-        	object[] fromTo=new object[2]{from, to};
-        	return new Is(Operators.Between,fromTo);
+            object[] fromTo = new object[2] { from, to };
+            return new Is(Operators.Between, fromTo);
         }
 
     }
@@ -507,7 +517,7 @@ namespace SimpleAssertThat
                 string className = lst.LastOrDefault();
                 lst.Remove(className);
                 string assemblyName = string.Join(",", lst);
-               
+
                 if (assemblyName != null && assemblyName.Length > 0)
                 {
                     type = Type.GetType(reflection.ClassName + "," + assemblyName);
@@ -536,7 +546,7 @@ namespace SimpleAssertThat
 
                 object magicValue = method.Invoke(instance, parameters);
 
-                return magicValue == null ? "null" : magicValue ;
+                return magicValue == null ? "null" : magicValue;
             }
 
             return null;
@@ -597,15 +607,15 @@ namespace SimpleAssertThat
             bool testResult = proceed ? GetTestResult(expression, condition, message, testName) : false;
 
 
-           
 
-           return testResult;
+
+            return testResult;
 
         }
 
         private static bool GetTestResult(object expression, ICondition condition, string message = "", string testName = "")
         {
-            
+
             #region Validations
             Predicate<object> predicate = null;
             var operandOne = expression;
@@ -655,22 +665,22 @@ namespace SimpleAssertThat
             else if (condition.ConditionName == Operators.GreaterThanOrEqualTo)
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString());
-            }                                                  
-            else if(condition.ConditionName==Operators.NotGreaterThanOrEqualTo)
+            }
+            else if (condition.ConditionName == Operators.NotGreaterThanOrEqualTo)
             {
-            	predicate = (p) => !(Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString()));	
+                predicate = (p) => !(Decimal.Parse(p.ToString()) >= Decimal.Parse(condition.ConditionOperandValue.ToString()));
             }
             else if (condition.ConditionName == Operators.LesserThan)
             {
                 predicate = (p) => Decimal.Parse(p.ToString()) < Decimal.Parse(condition.ConditionOperandValue.ToString());
-            } 
-            else if(condition.ConditionName == Operators.LesserThanOrEqualTo)
-            {
-            	predicate = (p) => Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString());	
             }
-            else if(condition.ConditionName == Operators.NotLesserThanOrEqualTo)
+            else if (condition.ConditionName == Operators.LesserThanOrEqualTo)
             {
-            	predicate = (p) => !(Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString()));		
+                predicate = (p) => Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString());
+            }
+            else if (condition.ConditionName == Operators.NotLesserThanOrEqualTo)
+            {
+                predicate = (p) => !(Decimal.Parse(p.ToString()) <= Decimal.Parse(condition.ConditionOperandValue.ToString()));
             }
             else if (condition.ConditionName == Operators.NotLesserThan)
             {
@@ -683,16 +693,17 @@ namespace SimpleAssertThat
             else if (condition.ConditionName == Operators.NotSameAs)
             {
                 predicate = (p) => p.GetHashCode() != condition.ConditionOperandValue.GetHashCode();
-            }                                  
-            else if(condition.ConditionName==Operators.Between)
-            {            	
-            	  decimal from=decimal.Parse(condition.ConditionOperandValues[0].ToString());
-            	  decimal to=decimal.Parse(condition.ConditionOperandValues[1].ToString());
-            	 
-            	  predicate=(p)=>{
-            	 	decimal	decValue=decimal.Parse(p.ToString());
-            	 	return decValue>=from && decValue<=to;
-            	 };
+            }
+            else if (condition.ConditionName == Operators.Between)
+            {
+                decimal from = decimal.Parse(condition.ConditionOperandValues[0].ToString());
+                decimal to = decimal.Parse(condition.ConditionOperandValues[1].ToString());
+
+                predicate = (p) =>
+                {
+                    decimal decValue = decimal.Parse(p.ToString());
+                    return decValue >= from && decValue <= to;
+                };
             }
             else if (condition.ConditionName == Operators.NotEqualTo)
             {
@@ -716,7 +727,7 @@ namespace SimpleAssertThat
                 predicate = (p) => p != null;
                 condition.ConditionOperandValue = "NotNull";
             }
-            else if(condition.ConditionName==Operators.Zero)
+            else if (condition.ConditionName == Operators.Zero)
             {
                 predicate = (p) => (int)p == 0;
                 condition.ConditionOperandValue = "Zero";
@@ -726,7 +737,7 @@ namespace SimpleAssertThat
                 predicate = (p) => (int)p != 0;
                 condition.ConditionOperandValue = "NotZero";
             }
-           
+
             #endregion
 
             #region Exceptions
@@ -846,7 +857,7 @@ namespace SimpleAssertThat
 
                 };
             }
-            else if(condition.ConditionName==Operators.HaveSize)
+            else if (condition.ConditionName == Operators.HaveSize)
             {
                 predicate = (p) => IsOfSize(p, condition.ConditionOperandValue);
             }
@@ -934,17 +945,19 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => !((Type)(condition.ConditionOperandValue)).IsAssignableFrom(p.GetType());
             }
-            else if(condition.ConditionName == Operators.Generic)
+            else if (condition.ConditionName == Operators.Generic)
             {
-                predicate = (p) => {
+                predicate = (p) =>
+                {
                     condition.ConditionOperandValue = p.GetType();
                     return p.GetType().IsGenericType;
                 };
-                
+
             }
-            else if(condition.ConditionName == Operators.NotGeneric)
+            else if (condition.ConditionName == Operators.NotGeneric)
             {
-                 predicate = (p) => {
+                predicate = (p) =>
+                {
                     condition.ConditionOperandValue = p.GetType();
                     return !p.GetType().IsGenericType;
                 };
@@ -966,7 +979,7 @@ namespace SimpleAssertThat
                 };
             }
 
-            else if(condition.ConditionName==Operators.String)
+            else if (condition.ConditionName == Operators.String)
             {
                 predicate = (p) =>
                 {
@@ -982,7 +995,7 @@ namespace SimpleAssertThat
                     return p.GetType() != typeof(System.String);
                 };
             }
-            else if(condition.ConditionName==Operators.Boolean)
+            else if (condition.ConditionName == Operators.Boolean)
             {
                 predicate = (p) =>
                 {
@@ -998,7 +1011,7 @@ namespace SimpleAssertThat
                     return p.GetType() != typeof(System.Boolean);
                 };
             }
-            else if(condition.ConditionName==Operators.ValueType)
+            else if (condition.ConditionName == Operators.ValueType)
             {
                 predicate = (p) =>
                 {
@@ -1006,17 +1019,17 @@ namespace SimpleAssertThat
                     return p.GetType().IsValueType;
                 };
             }
-            else if(condition.ConditionName == Operators.ObjectType)
+            else if (condition.ConditionName == Operators.ObjectType)
             {
-            	  predicate = (p) =>
+                predicate = (p) =>
                 {
                     condition.ConditionOperandValue = p.GetType();
                     return p.GetType().BaseType == typeof(Object);
                 };
             }
-            else if(condition.ConditionName == Operators.NotObjectType)
+            else if (condition.ConditionName == Operators.NotObjectType)
             {
-            	  predicate = (p) =>
+                predicate = (p) =>
                 {
                     condition.ConditionOperandValue = p.GetType();
                     return p.GetType().BaseType != typeof(Object);
@@ -1030,12 +1043,27 @@ namespace SimpleAssertThat
                     return !p.GetType().IsValueType;
                 };
             }
-            else if(condition.ConditionName==Operators.Integer)
+            else if (condition.ConditionName == Operators.Integer)
             {
                 predicate = (p) =>
                 {
                     condition.ConditionOperandValue = p.GetType();
                     return p.GetType() == typeof(System.Int32) || p.GetType() == typeof(System.Int16) || p.GetType() == typeof(System.Int64);
+                };
+            }
+            else if (condition.ConditionName == Operators.Date)
+            {
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = typeof(System.DateTime);
+                    bool isDate=false;
+                    try{
+                       var dt = DateTime.Parse(p.ToString());
+                        isDate=dt.GetType()==typeof(System.DateTime);
+                    }
+                    catch{}
+
+                    return p.GetType() != typeof(System.Decimal) && isDate;
                 };
             }
             else if (condition.ConditionName == Operators.NotInteger)
@@ -1046,9 +1074,9 @@ namespace SimpleAssertThat
                     return p.GetType() != typeof(System.Int32) && p.GetType() != typeof(System.Int16) && p.GetType() != typeof(System.Int64);
                 };
             }
-            else if(condition.ConditionName==Operators.Numeric)
+            else if (condition.ConditionName == Operators.Numeric)
             {
-                
+
                 var regex = GetNumericRegexPattern();
                 predicate = (p) =>
                 {
@@ -1060,19 +1088,21 @@ namespace SimpleAssertThat
             else if (condition.ConditionName == Operators.NotNumeric)
             {
                 var regex = GetNumericRegexPattern();
-                predicate = (p) => {
+                predicate = (p) =>
+                {
                     var res = regex.Match(operandOne.ToString()).Success;
                     condition.ConditionOperandValue = res.ToString();
                     return !res;
                 };
             }
 
-#endregion
+            #endregion
 
             #region Regex
-            else if(condition.ConditionName==Operators.RegexMatch)
+            else if (condition.ConditionName == Operators.RegexMatch)
             {
-                predicate = (p) => {
+                predicate = (p) =>
+                {
                     Match match = Regex.Match(p.ToString(), condition.ConditionOperandValue.ToString());
                     return match.Success;
                 };
@@ -1143,30 +1173,30 @@ namespace SimpleAssertThat
 
             return testResult;
         }
-        private static bool IsOfSize(object operand,object sizeObject)
+        private static bool IsOfSize(object operand, object sizeObject)
         {
             int size = (int)sizeObject;
-             
-            if(operand is ICollection)
+
+            if (operand is ICollection)
             {
                 return ((ICollection)operand).Count == size;
             }
-            else if(operand is Array)
+            else if (operand is Array)
             {
                 return ((Array)operand).Length == size;
             }
-            else if(operand is String)
+            else if (operand is String)
             {
                 return ((String)operand).Length == size;
             }
-           
+
             return false;
         }
         private static Regex GetNumericRegexPattern()
         {
             return new Regex(@"^-?[0-9][0-9,\.]+$");
         }
-        private static string GetActualDisplay(ICondition condition,object operandOne)
+        private static string GetActualDisplay(ICondition condition, object operandOne)
         {
             string actualResult = "";
 
@@ -1184,7 +1214,7 @@ namespace SimpleAssertThat
 
             }
 
-            
+
 
             return actualResult;
         }
@@ -1203,7 +1233,7 @@ namespace SimpleAssertThat
 
             }
 
-            if(condition.ConditionName==Operators.Exception || condition.ConditionName==Operators.NoException)
+            if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
             {
                 expected = (condition.ConditionOperandValue != null ? condition.ConditionOperandValue.ToString() : "Exception ");
             }
@@ -1214,7 +1244,7 @@ namespace SimpleAssertThat
         {
             List<object> lst = new List<object>();
 
-            foreach(var el in collection)
+            foreach (var el in collection)
             {
                 lst.Add(el);
             }
@@ -1327,19 +1357,19 @@ namespace SimpleAssertThat
 
             if (testPassed)
             {
-                Show("Passed",testName,"");
+                Show("Passed", testName, "");
                 TotalPassed++;
             }
             else
             {
-                Show("Failed" ,testName, message);
+                Show("Failed", testName, message);
                 TotalFailed++;
             }
         }
-        public static void Show(string result,string testName,string message)
+        public static void Show(string result, string testName, string message)
         {
             string textToDisplay = result;
-            if(!string.IsNullOrEmpty(testName))
+            if (!string.IsNullOrEmpty(testName))
             {
                 textToDisplay += " : (n) - " + testName;
             }
@@ -1373,7 +1403,7 @@ namespace SimpleAssertThat
         public Refl InClass(Type type)
         {
 
-            if(!string.IsNullOrEmpty(this.ClassName))
+            if (!string.IsNullOrEmpty(this.ClassName))
             {
                 throw new Exception("Class name has been already defined for this test");
             }
@@ -1401,7 +1431,7 @@ namespace SimpleAssertThat
 
 
     }
-    
+
     public class AMethod
     {
         public static Refl ByName(string methodName)
@@ -1414,7 +1444,7 @@ namespace SimpleAssertThat
 
 
     }
-    
+
     public class Throws : ICondition
     {
         public Operators ConditionName { get; set; }
@@ -1432,7 +1462,7 @@ namespace SimpleAssertThat
         }
         public static Throws Exception()
         {
-            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = null};
+            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = null };
         }
         public static Throws NoException()
         {
@@ -1481,7 +1511,7 @@ namespace SimpleAssertThat
 
         public static Is RegexMatch(string pattern)
         {
-            return new Is(Operators.RegexMatch,pattern);
+            return new Is(Operators.RegexMatch, pattern);
         }
         public static Is NoRegexMatch(string pattern)
         {
