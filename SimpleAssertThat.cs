@@ -507,6 +507,8 @@ namespace SimpleAssertThat
         private static int TotalFailed = 0;
         private static int TotalPassed = 0;
         private static bool onlyFirst = false;
+        private bool ConditionResult = false;
+        private object Expression = null;
 
         private static object InvokeMethod(Refl reflection)
         {
@@ -586,27 +588,31 @@ namespace SimpleAssertThat
             onlyFirst = true;
         }
 
-        public static void That(object expression, string testName)
+        public static Assert That(object expression, string testName)
         {
-            That(expression, null, "", testName);
+            
+            return That(expression, null, "", testName);
+            
         }
 
-        public static void That(object expression, string message = "", string testName = "")
+        public static Assert That(object expression, string message = "", string testName = "")
         {
-            That(expression, null, message, testName);
+            
+            return That(expression, null, message, testName);
+           
         }
 
-        public static void That(object expression, ICondition condition, string testName)
+        public static Assert That(object expression, ICondition condition, string testName)
         {
-            That(expression, condition, "", testName);
+            return That(expression, condition, "", testName);
         }
 
-        public static bool That(object expression, ICondition condition, string message = "", string testName = "")
+        public static Assert That(object expression, ICondition condition, string message = "", string testName = "")
         {
             bool proceed = false;
             if (onlyFirst && TotalTests == 1)
             {
-                return false;
+                return null;
             }
             else
             {
@@ -616,10 +622,25 @@ namespace SimpleAssertThat
             bool testResult = proceed ? GetTestResult(expression, condition, message, testName) : false;
 
 
+            Assert obj = new Assert();
+            obj.ConditionResult = testResult;
+            obj.Expression = expression;
 
+            return obj;
 
-            return testResult;
+        }
 
+        public Assert OR(ICondition condition=null, string message = "", string testName = "")
+        {
+           
+            this.ConditionResult=this.ConditionResult || Assert.That(this.Expression, condition).ConditionResult;
+            return this;
+        }
+        public Assert AND(ICondition condition = null, string message = "", string testName = "")
+        {
+
+            this.ConditionResult = this.ConditionResult && Assert.That(this.Expression, condition).ConditionResult;
+            return this;
         }
 
         private static bool GetTestResult(object expression, ICondition condition, string message = "", string testName = "")
@@ -720,11 +741,19 @@ namespace SimpleAssertThat
             }
             else if (condition.ConditionName == Operators.True)
             {
-                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = Convert.ToBoolean(p.ToString());
+                    return Convert.ToBoolean(p.ToString()) == true;
+                };
             }
             else if (condition.ConditionName == Operators.False)
             {
-                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+                predicate = (p) =>
+                {
+                    condition.ConditionOperandValue = Convert.ToBoolean(p.ToString());
+                    return Convert.ToBoolean(p.ToString()) == false;
+                };
             }
             else if (condition.ConditionName == Operators.Null)
             {
@@ -758,12 +787,15 @@ namespace SimpleAssertThat
             }
             else if (condition.ConditionName == Operators.NoException)
             {
-                predicate = (p) => p == null ||
+                predicate = (p) => 
+                    !(
+                    p == null ||
                    (p != null && (p is Exception) &&
 
                      (condition.ConditionOperandValue != null ?
                      ((Exception)p).InnerException.GetType() != ((Type)condition.ConditionOperandValue)
-                     : false));
+                     : true))
+                     );
             }
             #endregion
 
@@ -974,7 +1006,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) =>
                 {
-                    condition.ConditionOperandValue = p.GetType();
+                    condition.ConditionOperandValue = p.GetType().IsGenericType;
                     return p.GetType().IsGenericType;
                 };
 
@@ -983,7 +1015,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) =>
                 {
-                    condition.ConditionOperandValue = p.GetType();
+                    condition.ConditionOperandValue = p.GetType().IsGenericType;
                     return !p.GetType().IsGenericType;
                 };
             }
@@ -1143,8 +1175,16 @@ namespace SimpleAssertThat
             #endregion
 
             bool testResult = predicate(operandOne);
+            ShowResult(testResult, condition, operandOne, message, testName);
+           
+            
+            return testResult;
+        }
 
+        private static void ShowResult(bool testResult, ICondition condition, object operandOne, string message,string testName)
+        {
             #region ShowResults
+
             TestCondition(testResult, message, testName);
 
             if (true)//!testResult
@@ -1189,15 +1229,14 @@ namespace SimpleAssertThat
                 }
                 //Console.Write(expected);
 
-                Console.Write(" (" + condition.Verb +"."+ condition.ConditionName + ")");
+                Console.Write(" (" + condition.Verb + "." + condition.ConditionName + ")");
 
                 Console.WriteLine(" Value: " + expected);
 
             }
             #endregion
-
-            return testResult;
         }
+
         private static bool IsOfSize(object operand, object sizeObject)
         {
             int size = (int)sizeObject;
