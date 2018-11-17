@@ -2,9 +2,9 @@
 A Simple, Small Assert.That unit testing tool for .Net projects.
 
 #### Features:
-1. Simple to use
+1. Simple to use(Even non C# programmer can write unit testing code to test various technical/functional scenarios)
 2. More readable unit testing code
-3. Small Size(less than 6KB)
+3. Small Size(less than 50KB)
 4. Test almost every units of your project.
 5. Open source, code can be changed if required.
 
