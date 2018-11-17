@@ -1319,9 +1319,16 @@ namespace SimpleAssertThat
         private static string GetListString(ICollection collection)
         {
             List<string> lst = new List<string>();
+            int i = 1;
             foreach (var e in collection)
             {
                 lst.Add(e.ToString());
+                if (i++ == 10)
+                {
+                    lst.Add("...");
+                    break;
+                }
+
             }
 
             return "{" + string.Join(",", lst) + "}";
@@ -1330,9 +1337,15 @@ namespace SimpleAssertThat
         private static string GetElementsString(params object[] parameters)
         {
             List<string> lst = new List<string>();
+            int i = 1;
             foreach (var e in parameters)
             {
                 lst.Add(e.ToString());
+                if(i++==10)
+                {
+                    lst.Add("...");
+                    break;
+                }
             }
 
             return "{" + string.Join(",", lst) + "}";
