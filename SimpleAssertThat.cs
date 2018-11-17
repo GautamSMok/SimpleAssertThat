@@ -793,8 +793,8 @@ namespace SimpleAssertThat
                    (p != null && (p is Exception) &&
 
                      (condition.ConditionOperandValue != null ?
-                     ((Exception)p).InnerException.GetType() != ((Type)condition.ConditionOperandValue)
-                     : true))
+                     ((Exception)p).InnerException.GetType() == ((Type)condition.ConditionOperandValue)
+                     : false))
                      );
             }
             #endregion
