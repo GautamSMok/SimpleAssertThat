@@ -75,6 +75,10 @@ namespace SimpleAssertThat
         HaveSize,
         NotHaveSize,
         Between,
+        StartWith,
+        EndWith,
+        NotStartWith,
+        NotEndWith
 
     }
 
@@ -83,6 +87,7 @@ namespace SimpleAssertThat
         Operators ConditionName { get; set; }
         Object ConditionOperandValue { get; set; }
         Object[] ConditionOperandValues { get; set; }
+        string Verb { get; set; }
     }
 
     public class Is : ICondition
@@ -90,19 +95,21 @@ namespace SimpleAssertThat
         public Operators ConditionName { get; set; }
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
-
+        public string Verb { get; set; }
 
 
         public Is(Operators conditionName, Object operandValue)
         {
             this.ConditionName = conditionName;
             this.ConditionOperandValue = operandValue;
+            this.Verb = "Is";
         }
 
         public Is(Operators conditionName, Object[] operandValues)
         {
             this.ConditionName = conditionName;
             this.ConditionOperandValues = operandValues;
+            this.Verb = "Is";
         }
 
         public static Is Zero
@@ -426,6 +433,8 @@ namespace SimpleAssertThat
             object[] fromTo = new object[2] { from, to };
             return new Is(Operators.Between, fromTo);
         }
+
+        
 
     }
 
@@ -826,6 +835,22 @@ namespace SimpleAssertThat
 
                 };
             }
+            else if(condition.ConditionName==Operators.StartWith)
+            {
+                predicate = (p) => {return p.ToString().StartsWith(condition.ConditionOperandValue.ToString());};
+            }
+            else if(condition.ConditionName==Operators.EndWith)
+            {
+                predicate = (p) => { return p.ToString().EndsWith(condition.ConditionOperandValue.ToString()); };
+            }
+            else if(condition.ConditionName==Operators.NotStartWith)
+            {
+                predicate = (p) => { return !p.ToString().StartsWith(condition.ConditionOperandValue.ToString()); };
+            }
+            else if(condition.ConditionName==Operators.NotEndWith)
+            {
+                predicate = (p) => { return !p.ToString().EndsWith(condition.ConditionOperandValue.ToString()); };
+            }
             else if (condition.ConditionName == Operators.NotContain)
             {
                 predicate = (p) =>
@@ -1164,7 +1189,7 @@ namespace SimpleAssertThat
                 }
                 //Console.Write(expected);
 
-                Console.Write(" (" + condition.ConditionName + ")");
+                Console.Write(" (" + condition.Verb +"."+ condition.ConditionName + ")");
 
                 Console.WriteLine(" Value: " + expected);
 
@@ -1451,22 +1476,23 @@ namespace SimpleAssertThat
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
         public Type Ex { get; set; }
+        public string Verb { get; set; }
 
         public static Throws Exception(Type exceptionType)
         {
-            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = exceptionType };
+            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = exceptionType,Verb="Throws" };
         }
         public static Throws NoException(Type exceptionType)
         {
-            return new Throws() { ConditionName = Operators.NoException, ConditionOperandValue = exceptionType };
+            return new Throws() { ConditionName = Operators.NoException, ConditionOperandValue = exceptionType, Verb = "Throws" };
         }
         public static Throws Exception()
         {
-            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = null };
+            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = null, Verb = "Throws" };
         }
         public static Throws NoException()
         {
-            return new Throws() { ConditionName = Operators.NoException, ConditionOperandValue = null };
+            return new Throws() { ConditionName = Operators.NoException, ConditionOperandValue = null, Verb = "Throws" };
         }
     }
 
@@ -1475,57 +1501,86 @@ namespace SimpleAssertThat
         public Operators ConditionName { get; set; }
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
-        public static Is Return(object operandValue)
+        public string Verb { get; set; }
+        public Does(Operators operatorName,object operandValue)
         {
-            return new Is(Operators.Return, operandValue);
+            this.ConditionName = operatorName;
+            this.ConditionOperandValue = operandValue;
+            this.Verb = "Does";
         }
-        public static Is NotReturn(object operandValue)
+        public Does(Operators operatorName, object[] operandValues)
         {
-            return new Is(Operators.NotReturn, operandValue);
+            this.ConditionName = operatorName;
+            this.ConditionOperandValues = operandValues;
+            this.Verb = "Does";
         }
-        public static Is HaveAny(params object[] elements)
+        public static Does Return(object operandValue)
         {
-            return new Is(Operators.HaveAny, elements);
+            return new Does(Operators.Return, operandValue);
         }
-        public static Is HaveAll(params object[] elements)
+        public static Does NotReturn(object operandValue)
         {
-            return new Is(Operators.HaveAll, elements);
+            return new Does(Operators.NotReturn, operandValue);
         }
-        public static Is NotHaveAny(params object[] elements)
+        public static Does HaveAny(params object[] elements)
         {
-            return new Is(Operators.NotHaveAny, elements);
+            return new Does(Operators.HaveAny, elements);
         }
-        public static Is NotHaveAll(params object[] elements)
+        public static Does HaveAll(params object[] elements)
         {
-            return new Is(Operators.NotHaveAll, elements);
+            return new Does(Operators.HaveAll, elements);
         }
-        public static Is Contain(params object[] elements)
+        public static Does NotHaveAny(params object[] elements)
         {
-            return new Is(Operators.Contain, elements);
+            return new Does(Operators.NotHaveAny, elements);
+        }
+        public static Does NotHaveAll(params object[] elements)
+        {
+            return new Does(Operators.NotHaveAll, elements);
+        }
+        public static Does Contain(params object[] elements)
+        {
+            return new Does(Operators.Contain, elements);
         }
 
-        public static Is NotContain(params object[] elements)
+        public static Does NotContain(params object[] elements)
         {
-            return new Is(Operators.NotContain, elements);
+            return new Does(Operators.NotContain, elements);
         }
 
-        public static Is RegexMatch(string pattern)
+        public static Does RegexMatch(string pattern)
         {
-            return new Is(Operators.RegexMatch, pattern);
+            return new Does(Operators.RegexMatch, pattern);
         }
-        public static Is NoRegexMatch(string pattern)
+        public static Does NoRegexMatch(string pattern)
         {
-            return new Is(Operators.NoRegexMatch, pattern);
+            return new Does(Operators.NoRegexMatch, pattern);
         }
 
 
-        public static Is HaveSize(int size)
+        public static Does HaveSize(int size)
         {
-            return new Is(Operators.HaveSize, size);
+            return new Does(Operators.HaveSize, size);
         }
-        public static Is NotHaveSize(int size)
+        public static Does NotHaveSize(int size)
         {
-            return new Is(Operators.NotHaveSize, size);
+            return new Does(Operators.NotHaveSize, size);
+        }
+        public static Does StartWith(object operand)
+        {
+            return new Does(Operators.StartWith, operand);
+        }
+        public static Does EndWith(object operand)
+        {
+            return new Does(Operators.EndWith, operand);
+        }
+        public static Does NotStartWith(object operand)
+        {
+            return new Does(Operators.NotStartWith, operand);
+        }
+        public static Does NotEndWith(object operand)
+        {
+            return new Does(Operators.NotEndWith, operand);
         }
     }
 
