@@ -36,7 +36,6 @@ namespace SimpleAssertThat
         HaveAll,
         NotHaveAny,
         NotHaveAll,
-        InOrder,
         Contain,
         NotContain,
         GreaterThan,
@@ -55,6 +54,7 @@ namespace SimpleAssertThat
         NotValueType,
         ObjectType,
         NotObjectType,
+        InOrder,
         InAscendingOrder,
         InDescendingOrder,
         String,
@@ -78,7 +78,19 @@ namespace SimpleAssertThat
         StartWith,
         EndWith,
         NotStartWith,
-        NotEndWith
+        NotEndWith,
+        HaveFirstElement,
+        NotHaveFirstElement,
+        HaveLastElement,
+        NotHaveLastElement,
+        HaveMaximum,
+        HaveMinimum,
+        NotHaveMaximum,
+        NotHaveMinimum,
+        HaveAverage,
+        NotHaveAverage,
+        HaveTotal,
+        NotHaveTotal,
 
     }
 
@@ -88,6 +100,7 @@ namespace SimpleAssertThat
         Object ConditionOperandValue { get; set; }
         Object[] ConditionOperandValues { get; set; }
         string Verb { get; set; }
+        bool CaseInSensitive { get; set; }
     }
 
     public class Is : ICondition
@@ -96,7 +109,7 @@ namespace SimpleAssertThat
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
         public string Verb { get; set; }
-
+        public bool CaseInSensitive { get; set; }
 
         public Is(Operators conditionName, Object operandValue)
         {
@@ -323,13 +336,13 @@ namespace SimpleAssertThat
             }
         }
 
-        public static Is EqualTo(object operandValue)
+        public static Is EqualTo(object operandValue,bool caseInSensitive=false)
         {
-            return GetIsObject(Operators.EqualTo, operandValue);
+            return GetIsObject(Operators.EqualTo, operandValue, caseInSensitive);
         }
-        public static Is NotEqualTo(object operandValue)
+        public static Is NotEqualTo(object operandValue, bool caseInSensitive = false)
         {
-            return GetIsObject(Operators.NotEqualTo, operandValue);
+            return GetIsObject(Operators.NotEqualTo, operandValue, caseInSensitive);
         }
         public static Is SameAs(object operandValue)
         {
@@ -342,6 +355,12 @@ namespace SimpleAssertThat
         private static Is GetIsObject(Operators operation, object operandValue)
         {
             var obj = new Is(operation, operandValue);
+            return obj;
+        }
+        private static Is GetIsObject(Operators operation, object operandValue,bool caseInSensitive)
+        {
+            var obj = new Is(operation, operandValue);
+            obj.CaseInSensitive = caseInSensitive;
             return obj;
         }
         public static Is GreaterThan(object operandValue)
@@ -507,7 +526,7 @@ namespace SimpleAssertThat
         private static int TotalFailed = 0;
         private static int TotalPassed = 0;
         private static bool onlyFirst = false;
-        private bool ConditionResult = false;
+        public bool ConditionResult = false;
         private object Expression = null;
 
         private static object InvokeMethod(Refl reflection)
@@ -643,13 +662,31 @@ namespace SimpleAssertThat
             return this;
         }
 
+        private static object CheckForString(ICondition condition,object operandValue)
+        {
+            if(condition.CaseInSensitive)
+            {
+                if (operandValue.GetType() != typeof(System.String))
+                {
+                    throw new Exception("Not a valid string to perform this operation");
+                }
+                else
+                {
+                    operandValue = operandValue.ToString().ToLower();
+                }
+            }
+
+            return operandValue;
+            
+        }
+
         private static bool GetTestResult(object expression, ICondition condition, string message = "", string testName = "")
         {
 
             #region Validations
             Predicate<object> predicate = null;
             var operandOne = expression;
-
+            operandOne=CheckForString(condition, operandOne);
             TotalTests++;
             if (condition == null)
             {
@@ -682,7 +719,7 @@ namespace SimpleAssertThat
             #region Basic Operators
             if (condition.ConditionName == Operators.EqualTo)
             {
-                predicate = (p) => p.ToString() == condition.ConditionOperandValue.ToString();
+                predicate = (p) => { return p.ToString() == condition.ConditionOperandValue.ToString(); };
             }
             else if (condition.ConditionName == Operators.GreaterThan)
             {
@@ -858,11 +895,26 @@ namespace SimpleAssertThat
                 {
                     if (p.GetType().ToString() == "System.String")
                     {
-                        return HasSubstrings(p.ToString(), "All", condition.ConditionOperandValues);
+                        return p.ToString().Contains(condition.ConditionOperandValue.ToString());
                     }
                     else
                     {
-                        throw new Exception("Not a valid string");
+                        return Contains(((ICollection)p), condition.ConditionOperandValue);
+                    }
+                           
+                };
+            }
+            else if (condition.ConditionName == Operators.NotContain)
+            {
+                predicate = (p) =>
+                {
+                    if (p.GetType().ToString() == "System.String")
+                    {
+                        return !p.ToString().Contains(condition.ConditionOperandValue.ToString());
+                    }
+                    else
+                    {
+                        return !Contains(((ICollection)p), condition.ConditionOperandValue);
                     }
 
                 };
@@ -883,37 +935,116 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => { return !p.ToString().EndsWith(condition.ConditionOperandValue.ToString()); };
             }
-            else if (condition.ConditionName == Operators.NotContain)
+            else if(condition.ConditionName==Operators.HaveFirstElement)
+            {
+                predicate = (p) => {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string first=GetFirstObject((ICollection)q).ToString();
+                    return first == condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.NotHaveFirstElement)
             {
                 predicate = (p) =>
                 {
-                    if (p.GetType().ToString() == "System.String")
-                    {
-                        return !HasSubstrings(p.ToString(), "Any", condition.ConditionOperandValues);
-                    }
-                    else
-                    {
-                        throw new Exception("Not a valid string");
-                    }
-
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string first = GetFirstObject((ICollection)q).ToString();
+                    return first != condition.ConditionOperandValue.ToString();
                 };
             }
-            else if (condition.ConditionName == Operators.NotContain)
+            else if (condition.ConditionName == Operators.HaveLastElement)
             {
                 predicate = (p) =>
                 {
-                    if (p.GetType().ToString() == "System.String")
-                    {
-                        return HasSubstrings(p.ToString(), "Zero", condition.ConditionOperandValues);
-                    }
-                    else
-                    {
-                        throw new Exception("Not a valid string");
-                    }
-
-
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string last = GetLastObject((ICollection)q).ToString();
+                    Console.WriteLine(last);
+                    return last == condition.ConditionOperandValue.ToString();
                 };
             }
+            else if (condition.ConditionName == Operators.NotHaveLastElement)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string last = GetLastObject((ICollection)q).ToString();
+                    return last != condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.HaveMaximum)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string max = GetList<object>((ICollection)q).Max().ToString();
+                    return max == condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.NotHaveMaximum)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string max = GetList<object>((ICollection)q).Max().ToString();
+                    return max != condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.HaveMinimum)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string min = GetList<object>((ICollection)q).Min().ToString();
+                    return min == condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.NotHaveMinimum)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string min = GetList<object>((ICollection)q).Min().ToString();
+                    return min != condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.HaveAverage)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string avg = GetList<decimal>((ICollection)q).Average().ToString();
+                    return avg == condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.NotHaveAverage)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string avg = GetList<decimal>((ICollection)q).Average().ToString();
+                    return avg != condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.HaveTotal)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string total = GetList<decimal>((ICollection)q).Sum().ToString();
+                    return total == condition.ConditionOperandValue.ToString();
+                };
+            }
+            else if (condition.ConditionName == Operators.NotHaveTotal)
+            {
+                predicate = (p) =>
+                {
+                    var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
+                    string total = GetList<decimal>((ICollection)q).Sum().ToString();
+                    return total != condition.ConditionOperandValue.ToString();
+                };
+            }
+           
+            
             else if (condition.ConditionName == Operators.HaveSize)
             {
                 predicate = (p) => IsOfSize(p, condition.ConditionOperandValue);
@@ -929,7 +1060,7 @@ namespace SimpleAssertThat
             {
                 if (operandOne is ICollection)
                 {
-                    predicate = p => GetList((ICollection)p).SequenceEqual(GetList((ICollection)condition.ConditionOperandValues));
+                    predicate = p => GetList<object>((ICollection)p).SequenceEqual(GetList<object>((ICollection)condition.ConditionOperandValues));
                 }
                 else
                 {
@@ -945,16 +1076,16 @@ namespace SimpleAssertThat
                     {
                         predicate = p =>
                         {
-                            condition.ConditionOperandValues = GetList((ICollection)p).OrderBy(x => x).ToArray();
-                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                            condition.ConditionOperandValues = GetList<object>((ICollection)p).OrderBy(x => x).ToArray();
+                            return GetList<object>((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
                         };
                     }
                     else
                     {
                         predicate = p =>
                         {
-                            condition.ConditionOperandValues = GetList((ICollection)p).OrderBy(x => x).ToArray();
-                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                            condition.ConditionOperandValues = GetList<object>((ICollection)p).OrderBy(x => x).ToArray();
+                            return GetList<object>((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
                         };
                     }
                 }
@@ -973,16 +1104,16 @@ namespace SimpleAssertThat
                     {
                         predicate = p =>
                         {
-                            condition.ConditionOperandValues = GetList((ICollection)p).OrderByDescending(x => x).ToArray();
-                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                            condition.ConditionOperandValues = GetList<object>((ICollection)p).OrderByDescending(x => x).ToArray();
+                            return GetList<object>((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
                         };
                     }
                     else
                     {
                         predicate = p =>
                         {
-                            condition.ConditionOperandValues = GetList((ICollection)p).OrderByDescending(x => x).ToArray();
-                            return GetList((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
+                            condition.ConditionOperandValues = GetList<object>((ICollection)p).OrderByDescending(x => x).ToArray();
+                            return GetList<object>((ICollection)p).SequenceEqual(condition.ConditionOperandValues);
                         };
                     }
                 }
@@ -1180,7 +1311,32 @@ namespace SimpleAssertThat
             
             return testResult;
         }
-
+        private static object GetFirstObject(ICollection collection)
+        {
+            object first = null;
+            foreach(var each in collection)
+            {
+                first = each;
+                break;
+            }
+            return first;
+        }
+        private static object GetLastObject(ICollection collection)
+        {
+            object last = null;
+            int lastIndex = collection.Count;
+            int i = 0;
+            foreach (var each in collection)
+            {
+                i++;
+                if (i == lastIndex)
+                {
+                    last = each;
+                    break;
+                }
+            }
+            return last;
+        }
         private static void ShowResult(bool testResult, ICondition condition, object operandOne, string message,string testName)
         {
             #region ShowResults
@@ -1304,17 +1460,41 @@ namespace SimpleAssertThat
 
             return expected;
         }
-        private static IEnumerable<object> GetList(ICollection collection)
+        private static IEnumerable<T> GetList<T>(ICollection collection)
+        {
+            if(typeof(T)==typeof(object))
+            {
+                return (IEnumerable<T>)GetObjectList(collection);
+            }
+            else
+            {
+                return (IEnumerable<T>)GetDecimalList(collection);
+            }
+        }
+        private static IEnumerable GetObjectList(ICollection collection)
         {
             List<object> lst = new List<object>();
 
-            foreach (var el in collection)
+            foreach (object el in collection)
             {
                 lst.Add(el);
             }
 
             return lst;
         }
+
+        private static IEnumerable GetDecimalList(ICollection collection)
+        {
+            List<decimal> lst = new List<decimal>();
+
+            foreach (object el in collection)
+            {
+                lst.Add(Convert.ToDecimal(el.ToString()));
+            }
+
+            return lst;
+        }
+
 
         private static string GetListString(ICollection collection)
         {
@@ -1476,7 +1656,6 @@ namespace SimpleAssertThat
             this.Method = methodName;
             return this;
         }
-
         public Refl InClass(Type type)
         {
 
@@ -1488,7 +1667,6 @@ namespace SimpleAssertThat
             this.ClassType = type;
             return this;
         }
-
         public Refl InClass(string className)
         {
             if (this.ClassType != null)
@@ -1499,14 +1677,11 @@ namespace SimpleAssertThat
             this.ClassName = className;
             return this;
         }
-
         public Refl WithParameters(params object[] parameters)
         {
             this.Parameters = parameters;
             return this;
         }
-
-
     }
 
     public class AMethod
@@ -1518,8 +1693,6 @@ namespace SimpleAssertThat
 
             return reflection;
         }
-
-
     }
 
     public class Throws : ICondition
@@ -1529,6 +1702,7 @@ namespace SimpleAssertThat
         public Object[] ConditionOperandValues { get; set; }
         public Type Ex { get; set; }
         public string Verb { get; set; }
+        public bool CaseInSensitive { get; set; }
 
         public static Throws Exception(Type exceptionType)
         {
@@ -1554,6 +1728,7 @@ namespace SimpleAssertThat
         public Object ConditionOperandValue { get; set; }
         public Object[] ConditionOperandValues { get; set; }
         public string Verb { get; set; }
+        public bool CaseInSensitive { get; set; }
         public Does(Operators operatorName,object operandValue)
         {
             this.ConditionName = operatorName;
@@ -1590,16 +1765,14 @@ namespace SimpleAssertThat
         {
             return new Does(Operators.NotHaveAll, elements);
         }
-        public static Does Contain(params object[] elements)
+        public static Does Contain(object operand)
         {
-            return new Does(Operators.Contain, elements);
+            return new Does(Operators.Contain, operand);
         }
-
-        public static Does NotContain(params object[] elements)
+        public static Does NotContain(object operand)
         {
-            return new Does(Operators.NotContain, elements);
+            return new Does(Operators.NotContain, operand);
         }
-
         public static Does RegexMatch(string pattern)
         {
             return new Does(Operators.RegexMatch, pattern);
@@ -1608,8 +1781,6 @@ namespace SimpleAssertThat
         {
             return new Does(Operators.NoRegexMatch, pattern);
         }
-
-
         public static Does HaveSize(int size)
         {
             return new Does(Operators.HaveSize, size);
@@ -1633,6 +1804,54 @@ namespace SimpleAssertThat
         public static Does NotEndWith(object operand)
         {
             return new Does(Operators.NotEndWith, operand);
+        }
+        public static Does HaveFirstElement(object operand)
+        {
+            return new Does(Operators.HaveFirstElement, operand);
+        }
+        public static Does NotHaveFirstElement(object operand)
+        {
+            return new Does(Operators.NotHaveFirstElement, operand);
+        }
+        public static Does HaveLastElement(object operand)
+        {
+            return new Does(Operators.HaveLastElement, operand);
+        }
+        public static Does NotHaveLastElement(object operand)
+        {
+            return new Does(Operators.NotHaveLastElement, operand);
+        }
+        public static Does HaveMaximum(object operand)
+        {
+            return new Does(Operators.HaveMaximum, operand);
+        }
+        public static Does NotHaveMaximum(object operand)
+        {
+            return new Does(Operators.NotHaveLastElement, operand);
+        }
+        public static Does HaveMinimum(object operand)
+        {
+            return new Does(Operators.HaveMinimum, operand);
+        }
+        public static Does NotHaveMinimum(object operand)
+        {
+            return new Does(Operators.NotHaveMinimum, operand);
+        }
+        public static Does HaveAverage(object operand)
+        {
+            return new Does(Operators.HaveAverage, operand);
+        }
+        public static Does NotHaveAverage(object operand)
+        {
+            return new Does(Operators.NotHaveAverage, operand);
+        }
+        public static Does HaveTotal(object operand)
+        {
+            return new Does(Operators.HaveTotal, operand);
+        }
+        public static Does NotHaveTotal(object operand)
+        {
+            return new Does(Operators.NotHaveTotal, operand);
         }
     }
 
