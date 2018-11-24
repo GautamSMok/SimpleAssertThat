@@ -1,4 +1,5 @@
 /*
+Link : https://github.com/GautamSMok/SimpleAssertThat
 Name: SimpleAssertThat 
 Description: A Simple, Small Assert.That testing tool for unit testing in your projects.
 Author: Gautam Mokal (gautammokal@live.com)
@@ -1415,7 +1416,7 @@ namespace SimpleAssertThat
         }
         private static Regex GetNumericRegexPattern()
         {
-            return new Regex(@"^-?[0-9][0-9,\.]+$");
+            return new Regex(@"^-?[0-9]?[0-9,\.]+$");
         }
         private static string GetActualDisplay(ICondition condition, object operandOne)
         {
