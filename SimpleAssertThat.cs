@@ -673,6 +673,7 @@ namespace SimpleAssertThat
                 else
                 {
                     operandValue = operandValue.ToString().ToLower();
+                    condition.ConditionOperandValue = condition.ConditionOperandValue.ToString().ToLower();
                 }
             }
 
@@ -1735,6 +1736,13 @@ namespace SimpleAssertThat
             this.ConditionOperandValue = operandValue;
             this.Verb = "Does";
         }
+        public Does(Operators operatorName, object operandValue,bool caseInsensitive)
+        {
+            this.ConditionName = operatorName;
+            this.ConditionOperandValue = operandValue;
+            this.Verb = "Does";
+            this.CaseInSensitive = caseInsensitive;
+        }
         public Does(Operators operatorName, object[] operandValues)
         {
             this.ConditionName = operatorName;
@@ -1769,9 +1777,17 @@ namespace SimpleAssertThat
         {
             return new Does(Operators.Contain, operand);
         }
+        public static Does Contain(object operand,bool caseInsensitive)
+        {
+            return new Does(Operators.Contain, operand, caseInsensitive);
+        }
         public static Does NotContain(object operand)
         {
             return new Does(Operators.NotContain, operand);
+        }
+        public static Does NotContain(object operand, bool caseInsensitive)
+        {
+            return new Does(Operators.NotContain, operand, caseInsensitive);
         }
         public static Does RegexMatch(string pattern)
         {
@@ -1793,17 +1809,33 @@ namespace SimpleAssertThat
         {
             return new Does(Operators.StartWith, operand);
         }
+        public static Does StartWith(object operand, bool caseInsensitive)
+        {
+            return new Does(Operators.StartWith, operand, caseInsensitive);
+        }
         public static Does EndWith(object operand)
         {
             return new Does(Operators.EndWith, operand);
+        }
+        public static Does EndWith(object operand, bool caseInsensitive)
+        {
+            return new Does(Operators.EndWith, operand, caseInsensitive);
         }
         public static Does NotStartWith(object operand)
         {
             return new Does(Operators.NotStartWith, operand);
         }
+        public static Does NotStartWith(object operand, bool caseInsensitive)
+        {
+            return new Does(Operators.NotStartWith, operand, caseInsensitive);
+        }
         public static Does NotEndWith(object operand)
         {
             return new Does(Operators.NotEndWith, operand);
+        }
+        public static Does NotEndWith(object operand, bool caseInsensitive)
+        {
+            return new Does(Operators.NotEndWith, operand, caseInsensitive);
         }
         public static Does HaveFirstElement(object operand)
         {
