@@ -1,5 +1,4 @@
 /*
-Link : https://github.com/GautamSMok/SimpleAssertThat
 Name: SimpleAssertThat 
 Description: A Simple, Small Assert.That testing tool for unit testing in your projects.
 Author: Gautam Mokal (gautammokal@live.com)
@@ -76,6 +75,7 @@ namespace SimpleAssertThat
         HaveSize,
         NotHaveSize,
         Between,
+        NotBetween,
         StartWith,
         EndWith,
         NotStartWith,
@@ -92,7 +92,8 @@ namespace SimpleAssertThat
         NotHaveAverage,
         HaveTotal,
         NotHaveTotal,
-
+        In,
+        NotIn,
     }
 
     public interface ICondition
@@ -454,7 +455,21 @@ namespace SimpleAssertThat
             return new Is(Operators.Between, fromTo);
         }
 
-        
+        public static Is NotBetween(object from, object to)
+        {
+            object[] fromTo = new object[2] { from, to };
+            return new Is(Operators.NotBetween, fromTo);
+        }
+
+        public static Is In(params object[] elements)
+        {
+            return new Is(Operators.In, elements);
+        }
+
+        public static Is NotIn(params object[] elements)
+        {
+            return new Is(Operators.NotIn, elements);
+        }
 
     }
 
@@ -763,6 +778,20 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => p.GetHashCode() != condition.ConditionOperandValue.GetHashCode();
             }
+            else if(condition.ConditionName==Operators.In)
+            {
+                predicate = (p) =>
+                {
+                    return CheckIfPresent(condition.ConditionOperandValues, p);
+                };
+            }
+            else if (condition.ConditionName == Operators.NotIn)
+            {
+                predicate = (p) =>
+                {
+                    return !CheckIfPresent(condition.ConditionOperandValues, p);
+                };
+            }
             else if (condition.ConditionName == Operators.Between)
             {
                 decimal from = decimal.Parse(condition.ConditionOperandValues[0].ToString());
@@ -772,6 +801,17 @@ namespace SimpleAssertThat
                 {
                     decimal decValue = decimal.Parse(p.ToString());
                     return decValue >= from && decValue <= to;
+                };
+            }
+            else if (condition.ConditionName == Operators.NotBetween)
+            {
+                decimal from = decimal.Parse(condition.ConditionOperandValues[0].ToString());
+                decimal to = decimal.Parse(condition.ConditionOperandValues[1].ToString());
+
+                predicate = (p) =>
+                {
+                    decimal decValue = decimal.Parse(p.ToString());
+                    return !(decValue >= from && decValue <= to);
                 };
             }
             else if (condition.ConditionName == Operators.NotEqualTo)
@@ -1389,7 +1429,9 @@ namespace SimpleAssertThat
 
                 Console.Write(" (" + condition.Verb + "." + condition.ConditionName + ")");
 
-                Console.WriteLine(" Value: " + expected);
+                string valueOrValues = condition.ConditionOperandValues != null && condition.ConditionOperandValues.Length>1? "Values:" : "Value:";
+
+                Console.WriteLine(" " + valueOrValues + expected);
 
             }
             #endregion
@@ -1570,6 +1612,22 @@ namespace SimpleAssertThat
             return CheckIfContains(lst, "Zero", parameters);
 
         }
+        private static bool CheckIfPresent(ICollection lst, object obj)
+        {
+            bool found = false;
+            foreach (var e in lst)
+            {
+                var type = e.GetType().BaseType.ToString();
+                var condition = type == "System.ValueType" ? obj.ToString() == e.ToString() : obj.GetHashCode() == e.GetHashCode();
+
+                if (condition)
+                {
+                    found=true;
+                    break;
+                }
+            }
+            return found;
+        }
         private static bool Contains(ICollection lst, params object[] parameters)
         {
             return CheckIfContains(lst, "Any", parameters);
@@ -1583,7 +1641,7 @@ namespace SimpleAssertThat
             {
                 foreach (var e in ar)
                 {
-                    var type = p.GetType().BaseType.ToString();
+                    var type = e.GetType().BaseType.ToString();
                     var condition = type == "System.ValueType" ? p.ToString() == e.ToString() : p.GetHashCode() == e.GetHashCode();
 
                     if (condition)
