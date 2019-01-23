@@ -703,12 +703,13 @@ namespace SimpleAssertThat
             #region Validations
             Predicate<object> predicate = null;
             var operandOne = expression;
-            operandOne=CheckForString(condition, operandOne);
+           
             TotalTests++;
             if (condition == null)
             {
                 condition = Is.True;
             }
+            operandOne = CheckForString(condition, operandOne);
 
             if (expression == null && (condition.ConditionName != Operators.Null && condition.ConditionName != Operators.NotNull))
             {
