@@ -94,6 +94,43 @@ namespace SimpleAssertThat
         NotHaveTotal,
         In,
         NotIn,
+        Even,
+        Odd,
+        //pending
+        EachElementZero,
+        EachElementNotZero,
+        EachElementBetween,
+        EachElementNotBetween,
+        EachElementEqualTo,
+        EachElementNotEqualTo,
+        EachElementGreaterThan,
+        EachElementNotGreaterThan,
+        EachElementGreaterThanOrEqualTo,
+        EachElementNotGreaterThanOrEqualTo,
+        EachElementLesserThan,
+        EachElementNotLesserThan,
+        EachElementLesserThanOrEqualTo,
+        EachElementNotLesserThanOrEqualTo,
+        EachElementEven,
+        EachElementOdd,
+        //pending
+        AnyElementZero,
+        AnyElementNotZero,
+        AnyElementBetween,
+        AnyElementNotBetween,
+        AnyElementEqualTo,
+        AnyElementNotEqualTo,
+        AnyElementGreaterThan,
+        AnyElementNotGreaterThan,
+        AnyElementGreaterThanOrEqualTo,
+        AnyElementNotGreaterThanOrEqualTo,
+        AnyElementLesserThan,
+        AnyElementNotLesserThan,
+        AnyElementLesserThanOrEqualTo,
+        AnyElementNotLesserThanOrEqualTo,
+        AnyElementEven,
+        AnyElementOdd,
+
     }
 
     public interface ICondition
@@ -132,6 +169,22 @@ namespace SimpleAssertThat
             get
             {
                 return GetIsObject(Operators.Zero, true);
+            }
+        }
+
+        public static Is Even
+        {
+            get
+            {
+                return GetIsObject(Operators.Even, true);
+            }
+        }
+
+        public static Is Odd
+        {
+            get
+            {
+                return GetIsObject(Operators.Odd, true);
             }
         }
 
@@ -338,7 +391,7 @@ namespace SimpleAssertThat
             }
         }
 
-        public static Is EqualTo(object operandValue,bool caseInSensitive=false)
+        public static Is EqualTo(object operandValue, bool caseInSensitive = false)
         {
             return GetIsObject(Operators.EqualTo, operandValue, caseInSensitive);
         }
@@ -359,7 +412,7 @@ namespace SimpleAssertThat
             var obj = new Is(operation, operandValue);
             return obj;
         }
-        private static Is GetIsObject(Operators operation, object operandValue,bool caseInSensitive)
+        private static Is GetIsObject(Operators operation, object operandValue, bool caseInSensitive)
         {
             var obj = new Is(operation, operandValue);
             obj.CaseInSensitive = caseInSensitive;
@@ -534,17 +587,79 @@ namespace SimpleAssertThat
             return 0;
         }
     }
+    [AttributeUsage(AttributeTargets.Class)]
+    public class SAT : Attribute
+    {
+
+    }
+    [AttributeUsage(AttributeTargets.Method)]
+    public class TestMethod : Attribute
+    {
+
+    }
+
+    public class TestMethods
+    {
+        public void StartTesting(Type type)
+        {
+            foreach (Object attributes in type.GetCustomAttributes(false))
+            {
+
+                //SAT sat = (SAT)attributes;
+                var methodType = attributes.GetType();
+                if (methodType.FullName == typeof(SAT).FullName)
+                {
+                    foreach (MethodInfo m in type.GetMethods())
+                    {
+                        foreach (Attribute attribute in m.GetCustomAttributes(true))
+                        {
+                            try
+                            {
+
+                                if (attribute.GetType().FullName == typeof(TestMethod).FullName)
+                                {
+                                    ConstructorInfo magicConstructor = type.GetConstructor(Type.EmptyTypes);
+                                    object magicClassObject = magicConstructor.Invoke(new object[] { });
+                                    var instance = magicClassObject != null ? magicClassObject : null;
+
+
+                                    //MethodInfo method = null;
+                                    type.GetMethod(m.Name, Type.EmptyTypes).Invoke(instance, null);
+                                    Console.BackgroundColor = System.ConsoleColor.DarkGreen;
+                                    Console.WriteLine("Passed Method: " + m.Name);
+                                    Assert.TotalFailed++;
+                                }
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.BackgroundColor = System.ConsoleColor.DarkRed;
+                                Console.WriteLine("Failed Method: " + m.Name + " Message : " + ex.InnerException.Message);
+                                Assert.TotalFailed++;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            // Assert.Summary();
+
+        }
+    }
 
     public class Assert
     {
 
-        private static int TotalTests = 0;
-        private static int TotalFailed = 0;
-        private static int TotalPassed = 0;
+        internal static int TotalTests = 0;
+        internal static int TotalFailed = 0;
+        internal static int TotalPassed = 0;
         private static bool onlyFirst = false;
         public bool ConditionResult = false;
         private object Expression = null;
-
+        public static bool ConsolidatedResult = false;
+        private static List<Results> resultsList = new List<Results>();
+        public static bool AttributedUnits = false;
         private static object InvokeMethod(Refl reflection)
         {
 
@@ -625,16 +740,16 @@ namespace SimpleAssertThat
 
         public static Assert That(object expression, string testName)
         {
-            
+
             return That(expression, null, "", testName);
-            
+
         }
 
         public static Assert That(object expression, string message = "", string testName = "")
         {
-            
+
             return That(expression, null, message, testName);
-           
+
         }
 
         public static Assert That(object expression, ICondition condition, string testName)
@@ -665,10 +780,10 @@ namespace SimpleAssertThat
 
         }
 
-        public Assert OR(ICondition condition=null, string message = "", string testName = "")
+        public Assert OR(ICondition condition = null, string message = "", string testName = "")
         {
-           
-            this.ConditionResult=this.ConditionResult || Assert.That(this.Expression, condition).ConditionResult;
+
+            this.ConditionResult = this.ConditionResult || Assert.That(this.Expression, condition).ConditionResult;
             return this;
         }
         public Assert AND(ICondition condition = null, string message = "", string testName = "")
@@ -678,9 +793,9 @@ namespace SimpleAssertThat
             return this;
         }
 
-        private static object CheckForString(ICondition condition,object operandValue)
+        private static object CheckForString(ICondition condition, object operandValue)
         {
-            if(condition.CaseInSensitive)
+            if (condition.CaseInSensitive)
             {
                 if (operandValue.GetType() != typeof(System.String))
                 {
@@ -694,7 +809,7 @@ namespace SimpleAssertThat
             }
 
             return operandValue;
-            
+
         }
 
         private static bool GetTestResult(object expression, ICondition condition, string message = "", string testName = "")
@@ -703,7 +818,7 @@ namespace SimpleAssertThat
             #region Validations
             Predicate<object> predicate = null;
             var operandOne = expression;
-           
+
             TotalTests++;
             if (condition == null)
             {
@@ -779,7 +894,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) => p.GetHashCode() != condition.ConditionOperandValue.GetHashCode();
             }
-            else if(condition.ConditionName==Operators.In)
+            else if (condition.ConditionName == Operators.In)
             {
                 predicate = (p) =>
                 {
@@ -831,7 +946,7 @@ namespace SimpleAssertThat
             {
                 predicate = (p) =>
                 {
-                    condition.ConditionOperandValue = Convert.ToBoolean(p.ToString());
+                    //condition.ConditionOperandValue = Convert.ToBoolean(p.ToString());
                     return Convert.ToBoolean(p.ToString()) == false;
                 };
             }
@@ -855,6 +970,31 @@ namespace SimpleAssertThat
                 predicate = (p) => (int)p != 0;
                 condition.ConditionOperandValue = "NotZero";
             }
+            else if(condition.ConditionName==Operators.Even)
+            {
+                if (typeof(int).FullName != operandOne.GetType().FullName)
+                {
+                    throw new Exception("Not an integer type");
+                    
+                }
+                predicate = (p) => {
+
+                    return ((int)p) % 2 == 0;
+                };
+            }
+            else if (condition.ConditionName == Operators.Odd)
+            {
+                if (typeof(int).FullName != operandOne.GetType().FullName)
+                {
+                    throw new Exception("Not an integer type");
+                    
+                }
+                predicate = (p) =>
+                {
+
+                    return ((int)p) % 2 != 0;
+                };
+            }
 
             #endregion
 
@@ -867,7 +1007,7 @@ namespace SimpleAssertThat
             }
             else if (condition.ConditionName == Operators.NoException)
             {
-                predicate = (p) => 
+                predicate = (p) =>
                     !(
                     p == null ||
                    (p != null && (p is Exception) &&
@@ -944,7 +1084,7 @@ namespace SimpleAssertThat
                     {
                         return Contains(((ICollection)p), condition.ConditionOperandValue);
                     }
-                           
+
                 };
             }
             else if (condition.ConditionName == Operators.NotContain)
@@ -962,27 +1102,28 @@ namespace SimpleAssertThat
 
                 };
             }
-            else if(condition.ConditionName==Operators.StartWith)
+            else if (condition.ConditionName == Operators.StartWith)
             {
-                predicate = (p) => {return p.ToString().StartsWith(condition.ConditionOperandValue.ToString());};
+                predicate = (p) => { return p.ToString().StartsWith(condition.ConditionOperandValue.ToString()); };
             }
-            else if(condition.ConditionName==Operators.EndWith)
+            else if (condition.ConditionName == Operators.EndWith)
             {
                 predicate = (p) => { return p.ToString().EndsWith(condition.ConditionOperandValue.ToString()); };
             }
-            else if(condition.ConditionName==Operators.NotStartWith)
+            else if (condition.ConditionName == Operators.NotStartWith)
             {
                 predicate = (p) => { return !p.ToString().StartsWith(condition.ConditionOperandValue.ToString()); };
             }
-            else if(condition.ConditionName==Operators.NotEndWith)
+            else if (condition.ConditionName == Operators.NotEndWith)
             {
                 predicate = (p) => { return !p.ToString().EndsWith(condition.ConditionOperandValue.ToString()); };
             }
-            else if(condition.ConditionName==Operators.HaveFirstElement)
+            else if (condition.ConditionName == Operators.HaveFirstElement)
             {
-                predicate = (p) => {
+                predicate = (p) =>
+                {
                     var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
-                    string first=GetFirstObject((ICollection)q).ToString();
+                    string first = GetFirstObject((ICollection)q).ToString();
                     return first == condition.ConditionOperandValue.ToString();
                 };
             }
@@ -1086,8 +1227,8 @@ namespace SimpleAssertThat
                     return total != condition.ConditionOperandValue.ToString();
                 };
             }
-           
-            
+
+
             else if (condition.ConditionName == Operators.HaveSize)
             {
                 predicate = (p) => IsOfSize(p, condition.ConditionOperandValue);
@@ -1287,12 +1428,13 @@ namespace SimpleAssertThat
                 predicate = (p) =>
                 {
                     condition.ConditionOperandValue = typeof(System.DateTime);
-                    bool isDate=false;
-                    try{
-                       var dt = DateTime.Parse(p.ToString());
-                        isDate=dt.GetType()==typeof(System.DateTime);
+                    bool isDate = false;
+                    try
+                    {
+                        var dt = DateTime.Parse(p.ToString());
+                        isDate = dt.GetType() == typeof(System.DateTime);
                     }
-                    catch{}
+                    catch { }
 
                     return p.GetType() != typeof(System.Decimal) && isDate;
                 };
@@ -1349,15 +1491,78 @@ namespace SimpleAssertThat
             #endregion
 
             bool testResult = predicate(operandOne);
-            ShowResult(testResult, condition, operandOne, message, testName);
-           
-            
+            if (!AttributedUnits)
+            {
+                if (testResult)
+                {
+                    TotalPassed++;
+                }
+                else
+                {
+                    TotalFailed++;
+                }
+            }
+            if (AttributedUnits)
+            {
+                if (!testResult)
+                {
+                    string valueOrValues = condition.ConditionOperandValues != null && condition.ConditionOperandValues.Length > 1 ? "Values:" : "Value:";
+
+                    string exmessage = "";
+                    string sententce = GetMessageSentence(condition, operandOne);
+
+
+                    if (message.Length > 0)
+                    {
+                        exmessage = sententce;
+                    }
+                    else
+                    {
+                        exmessage = sententce;
+                    }
+                     throw new Exception(exmessage);
+                }
+            }
+
+            if (!Assert.ConsolidatedResult)
+            {
+                ShowResult(testResult, condition, operandOne, message, testName);
+            }
+            else
+            {
+                Assert.resultsList.Add(new Results
+                {
+                    TestResult = testResult,
+                    Condition = condition,
+                    Message = message,
+                    ExpressionResult = operandOne,
+                    TestName = testName
+                });
+            }
+
             return testResult;
         }
+
+        public static void ShowResults()
+        {
+            foreach (var result in Assert.resultsList)
+            {
+                ShowResult(result.TestResult, result.Condition, result.ExpressionResult, result.Message, result.TestName);
+            }
+        }
+        private class Results
+        {
+            public bool TestResult { get; set; }
+            public ICondition Condition { get; set; }
+            public Object ExpressionResult { get; set; }
+            public string Message { get; set; }
+            public string TestName { get; set; }
+        }
+
         private static object GetFirstObject(ICollection collection)
         {
             object first = null;
-            foreach(var each in collection)
+            foreach (var each in collection)
             {
                 first = each;
                 break;
@@ -1380,7 +1585,7 @@ namespace SimpleAssertThat
             }
             return last;
         }
-        private static void ShowResult(bool testResult, ICondition condition, object operandOne, string message,string testName)
+        private static void ShowResult(bool testResult, ICondition condition, object operandOne, string message, string testName)
         {
             #region ShowResults
 
@@ -1389,53 +1594,63 @@ namespace SimpleAssertThat
             if (true)//!testResult
             {
 
-                Console.Write("Expected : ");
+//messge spce here
+               Console.WriteLine(GetMessageSentence(condition,operandOne));
+
+            }
+            #endregion
+        }
+        private static string GetMessageSentence(ICondition condition, object operandOne)
+        {
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Expected : ");
 
 
 
-                string actualResult = "";
+            string actualResult = "";
 
-                if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
+            if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
+            {
+                actualResult = operandOne != null && operandOne is Exception ? ((Exception)operandOne).InnerException.GetType().ToString() : (operandOne != null ? GetActualDisplay(condition, operandOne) : "");
+            }
+            else
+            {
+                actualResult = operandOne != null ? GetActualDisplay(condition, operandOne) : "";
+            }
+
+
+            sb.Append(actualResult);
+
+            string expected = "";
+
+            if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
+            {
+                if (condition.ConditionOperandValue != null)
                 {
-                    actualResult = operandOne != null && operandOne is Exception ? ((Exception)operandOne).InnerException.GetType().ToString() : (operandOne != null ? GetActualDisplay(condition, operandOne) : "");
-                }
-                else
-                {
-                    actualResult = operandOne != null ? GetActualDisplay(condition, operandOne) : "";
-                }
+                    var ex = condition.ConditionOperandValue != null ? ((Type)condition.ConditionOperandValue).ToString() : typeof(Exception).ToString();
+                    expected = ex;
 
-
-                Console.Write(actualResult);
-
-                string expected = "";
-
-                if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
-                {
-                    if (condition.ConditionOperandValue != null)
-                    {
-                        var ex = condition.ConditionOperandValue != null ? ((Type)condition.ConditionOperandValue).ToString() : typeof(Exception).ToString();
-                        expected = ex;
-
-                    }
-                    else
-                    {
-                        expected = GetExpectedDisplay(condition);
-                    }
                 }
                 else
                 {
                     expected = GetExpectedDisplay(condition);
                 }
-                //Console.Write(expected);
-
-                Console.Write(" (" + condition.Verb + "." + condition.ConditionName + ")");
-
-                string valueOrValues = condition.ConditionOperandValues != null && condition.ConditionOperandValues.Length>1? "Values:" : "Value:";
-
-                Console.WriteLine(" " + valueOrValues + expected);
-
             }
-            #endregion
+            else
+            {
+                expected = GetExpectedDisplay(condition);
+            }
+            //Console.Write(expected);
+
+            sb.Append(" (" + condition.Verb + "." + condition.ConditionName + ")");
+
+            string valueOrValues = condition.ConditionOperandValues != null && condition.ConditionOperandValues.Length > 1 ? "Values:" : "Value:";
+
+            sb.Append(" " + valueOrValues + expected);
+
+            return sb.ToString();
         }
 
         private static bool IsOfSize(object operand, object sizeObject)
@@ -1507,7 +1722,7 @@ namespace SimpleAssertThat
         }
         private static IEnumerable<T> GetList<T>(ICollection collection)
         {
-            if(typeof(T)==typeof(object))
+            if (typeof(T) == typeof(object))
             {
                 return (IEnumerable<T>)GetObjectList(collection);
             }
@@ -1566,7 +1781,7 @@ namespace SimpleAssertThat
             foreach (var e in parameters)
             {
                 lst.Add(e.ToString());
-                if(i++==10)
+                if (i++ == 10)
                 {
                     lst.Add("...");
                     break;
@@ -1623,7 +1838,7 @@ namespace SimpleAssertThat
 
                 if (condition)
                 {
-                    found=true;
+                    found = true;
                     break;
                 }
             }
@@ -1676,12 +1891,12 @@ namespace SimpleAssertThat
             if (testPassed)
             {
                 Show("Passed", testName, "");
-                TotalPassed++;
+                //TotalPassed++;
             }
             else
             {
                 Show("Failed", testName, message);
-                TotalFailed++;
+                //TotalFailed++;
             }
         }
         public static void Show(string result, string testName, string message)
@@ -1701,6 +1916,7 @@ namespace SimpleAssertThat
 
         public static void Summary()
         {
+            TotalTests = TotalPassed + TotalFailed;
             Console.WriteLine("Total Test : " + TotalTests + " Passed : " + TotalPassed + " Failed : " + TotalFailed);
             Reset();
         }
@@ -1767,7 +1983,7 @@ namespace SimpleAssertThat
 
         public static Throws Exception(Type exceptionType)
         {
-            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = exceptionType,Verb="Throws" };
+            return new Throws() { ConditionName = Operators.Exception, ConditionOperandValue = exceptionType, Verb = "Throws" };
         }
         public static Throws NoException(Type exceptionType)
         {
@@ -1790,13 +2006,13 @@ namespace SimpleAssertThat
         public Object[] ConditionOperandValues { get; set; }
         public string Verb { get; set; }
         public bool CaseInSensitive { get; set; }
-        public Does(Operators operatorName,object operandValue)
+        public Does(Operators operatorName, object operandValue)
         {
             this.ConditionName = operatorName;
             this.ConditionOperandValue = operandValue;
             this.Verb = "Does";
         }
-        public Does(Operators operatorName, object operandValue,bool caseInsensitive)
+        public Does(Operators operatorName, object operandValue, bool caseInsensitive)
         {
             this.ConditionName = operatorName;
             this.ConditionOperandValue = operandValue;
@@ -1837,7 +2053,7 @@ namespace SimpleAssertThat
         {
             return new Does(Operators.Contain, operand);
         }
-        public static Does Contain(object operand,bool caseInsensitive)
+        public static Does Contain(object operand, bool caseInsensitive)
         {
             return new Does(Operators.Contain, operand, caseInsensitive);
         }
