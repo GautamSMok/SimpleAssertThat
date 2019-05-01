@@ -97,39 +97,43 @@ namespace SimpleAssertThat
         Even,
         Odd,
         //pending
-        EachElementZero,
-        EachElementNotZero,
-        EachElementBetween,
-        EachElementNotBetween,
-        EachElementEqualTo,
-        EachElementNotEqualTo,
-        EachElementGreaterThan,
-        EachElementNotGreaterThan,
-        EachElementGreaterThanOrEqualTo,
-        EachElementNotGreaterThanOrEqualTo,
-        EachElementLesserThan,
-        EachElementNotLesserThan,
-        EachElementLesserThanOrEqualTo,
-        EachElementNotLesserThanOrEqualTo,
-        EachElementEven,
-        EachElementOdd,
+        HaveEachElementZero,
+        HaveEachElementNotZero,
+        HaveEachElementBetween,
+        HaveEachElementNotBetween,
+        HaveEachElementEqualTo,
+        HaveEachElementNotEqualTo,
+        HaveEachElementGreaterThan,
+        HaveEachElementNotGreaterThan,
+        HaveEachElementGreaterThanOrEqualTo,
+        HaveEachElementNotGreaterThanOrEqualTo,
+        HaveEachElementLesserThan,
+        HaveEachElementNotLesserThan,
+        HaveEachElementLesserThanOrEqualTo,
+        HaveEachElementNotLesserThanOrEqualTo,
+        HaveEachElementEven,
+        HaveEachElementOdd,
         //pending
-        AnyElementZero,
-        AnyElementNotZero,
-        AnyElementBetween,
-        AnyElementNotBetween,
-        AnyElementEqualTo,
-        AnyElementNotEqualTo,
-        AnyElementGreaterThan,
-        AnyElementNotGreaterThan,
-        AnyElementGreaterThanOrEqualTo,
-        AnyElementNotGreaterThanOrEqualTo,
-        AnyElementLesserThan,
-        AnyElementNotLesserThan,
-        AnyElementLesserThanOrEqualTo,
-        AnyElementNotLesserThanOrEqualTo,
-        AnyElementEven,
-        AnyElementOdd,
+        HaveAnyElementZero,
+        HaveAnyElementNotZero,
+        HaveAnyElementBetween,
+        HaveAnyElementNotBetween,
+        HaveAnyElementEqualTo,
+        HaveAnyElementNotEqualTo,
+        HaveAnyElementGreaterThan,
+        HaveAnyElementNotGreaterThan,
+        HaveAnyElementGreaterThanOrEqualTo,
+        HaveAnyElementNotGreaterThanOrEqualTo,
+        HaveAnyElementLesserThan,
+        HaveAnyElementNotLesserThan,
+        HaveAnyElementLesserThanOrEqualTo,
+        HaveAnyElementNotLesserThanOrEqualTo,
+        HaveAnyElementEven,
+        HaveAnyElementOdd,
+
+        //Pending
+        NotEven,
+        NotOdd,
 
     }
 
@@ -184,7 +188,7 @@ namespace SimpleAssertThat
         {
             get
             {
-                return GetIsObject(Operators.Odd, true);
+                return GetIsObject(Operators.Odd, False);
             }
         }
 
@@ -390,6 +394,8 @@ namespace SimpleAssertThat
                 return GetIsObject(Operators.NotGeneric, null);
             }
         }
+
+        
 
         public static Is EqualTo(object operandValue, bool caseInSensitive = false)
         {
@@ -627,7 +633,7 @@ namespace SimpleAssertThat
                                     type.GetMethod(m.Name, Type.EmptyTypes).Invoke(instance, null);
                                     Console.BackgroundColor = System.ConsoleColor.DarkGreen;
                                     Console.WriteLine("Passed Method: " + m.Name);
-                                    Assert.TotalFailed++;
+                                    Assert.TotalPassed++;
                                 }
 
                             }
@@ -674,6 +680,8 @@ namespace SimpleAssertThat
             else
             {
 
+
+
                 var lst = reflection.ClassName.Split('.').ToList();
                 string className = lst.LastOrDefault();
                 lst.Remove(className);
@@ -681,7 +689,14 @@ namespace SimpleAssertThat
 
                 if (assemblyName != null && assemblyName.Length > 0)
                 {
-                    type = Type.GetType(reflection.ClassName + "," + assemblyName);
+                    // type = Type.GetType(reflection.ClassName + "," + assemblyName);
+
+                    var an = Assembly.LoadWithPartialName(assemblyName);
+                    var classType = an.GetTypes().Where(t => t.Name == className).FirstOrDefault();
+                    if (classType != null)
+                    {
+                        type = classType;
+                    }
                 }
                 else
                 {
@@ -962,22 +977,23 @@ namespace SimpleAssertThat
             }
             else if (condition.ConditionName == Operators.Zero)
             {
-                predicate = (p) => (int)p == 0;
+                predicate = (p) => Convert.ToInt32(p) == 0;
                 condition.ConditionOperandValue = "Zero";
             }
             else if (condition.ConditionName == Operators.NotZero)
             {
-                predicate = (p) => (int)p != 0;
+                predicate = (p) => Convert.ToInt32(p) != 0;
                 condition.ConditionOperandValue = "NotZero";
             }
-            else if(condition.ConditionName==Operators.Even)
+            else if (condition.ConditionName == Operators.Even)
             {
                 if (typeof(int).FullName != operandOne.GetType().FullName)
                 {
                     throw new Exception("Not an integer type");
-                    
+
                 }
-                predicate = (p) => {
+                predicate = (p) =>
+                {
 
                     return ((int)p) % 2 == 0;
                 };
@@ -987,7 +1003,7 @@ namespace SimpleAssertThat
                 if (typeof(int).FullName != operandOne.GetType().FullName)
                 {
                     throw new Exception("Not an integer type");
-                    
+
                 }
                 predicate = (p) =>
                 {
@@ -1014,7 +1030,7 @@ namespace SimpleAssertThat
 
                      (condition.ConditionOperandValue != null ?
                      ((Exception)p).InnerException.GetType() == ((Type)condition.ConditionOperandValue)
-                     : false))
+                     : true))
                      );
             }
             #endregion
@@ -1142,7 +1158,7 @@ namespace SimpleAssertThat
                 {
                     var q = p.GetType().ToString() == "System.String" ? p.ToString().ToList<char>() : p;
                     string last = GetLastObject((ICollection)q).ToString();
-                    Console.WriteLine(last);
+                    
                     return last == condition.ConditionOperandValue.ToString();
                 };
             }
@@ -1490,6 +1506,28 @@ namespace SimpleAssertThat
             }
             #endregion
 
+            #region Each & Any
+            else if(condition.ConditionName == Operators.HaveEachElementZero)
+            {
+                predicate = (p) => {
+                    var lst=GetList<decimal>(p as ICollection);
+                    
+                    return lst.All(a=>a==0);
+
+                };// !IsOfSize(p, condition.ConditionOperandValue);
+            }
+            else if (condition.ConditionName == Operators.HaveAnyElementZero)
+            {
+                predicate = (p) =>
+                {
+                    var lst = GetList<decimal>(p as ICollection);
+
+                    return lst.Any(a => a == 0);
+
+                };// !IsOfSize(p, condition.ConditionOperandValue);
+            }
+            #endregion
+
             bool testResult = predicate(operandOne);
             if (!AttributedUnits)
             {
@@ -1520,7 +1558,7 @@ namespace SimpleAssertThat
                     {
                         exmessage = sententce;
                     }
-                     throw new Exception(exmessage);
+                    throw new Exception(exmessage);
                 }
             }
 
@@ -1594,8 +1632,8 @@ namespace SimpleAssertThat
             if (true)//!testResult
             {
 
-//messge spce here
-               Console.WriteLine(GetMessageSentence(condition,operandOne));
+                //messge spce here
+                Console.WriteLine(GetMessageSentence(condition, operandOne));
 
             }
             #endregion
@@ -1607,13 +1645,16 @@ namespace SimpleAssertThat
 
             sb.Append("Expected : ");
 
+            
 
 
             string actualResult = "";
 
             if (condition.ConditionName == Operators.Exception || condition.ConditionName == Operators.NoException)
             {
-                actualResult = operandOne != null && operandOne is Exception ? ((Exception)operandOne).InnerException.GetType().ToString() : (operandOne != null ? GetActualDisplay(condition, operandOne) : "");
+                actualResult = operandOne != null && operandOne is Exception && ((Exception)operandOne).InnerException != null ?
+                    ((Exception)operandOne).InnerException.GetType().ToString()
+                    : (operandOne != null ? GetActualDisplay(condition, operandOne) : "");
             }
             else
             {
@@ -1669,8 +1710,12 @@ namespace SimpleAssertThat
             {
                 return ((String)operand).Length == size;
             }
+            else
+            {
+                return operand.ToString().Length == size;
+            }
 
-            return false;
+           
         }
         private static Regex GetNumericRegexPattern()
         {
@@ -1703,9 +1748,12 @@ namespace SimpleAssertThat
             string expected = "";
             if (condition.ConditionOperandValue != null)
             {
+
                 expected = condition.ConditionOperandValue.ToString();
 
             }
+
+            
 
             if (condition.ConditionOperandValues != null)
             {
@@ -1776,9 +1824,20 @@ namespace SimpleAssertThat
 
         private static string GetElementsString(params object[] parameters)
         {
+            ICollection itemList = null;
+            if (parameters.Count() == 1)
+            {
+                var firstElement = (parameters as IList)[0];
+                itemList = (ICollection)firstElement;
+            }
+            else
+            {
+                itemList = parameters;
+            }
+
             List<string> lst = new List<string>();
             int i = 1;
-            foreach (var e in parameters)
+            foreach (var e in itemList)
             {
                 lst.Add(e.ToString());
                 if (i++ == 10)
@@ -1831,7 +1890,19 @@ namespace SimpleAssertThat
         private static bool CheckIfPresent(ICollection lst, object obj)
         {
             bool found = false;
-            foreach (var e in lst)
+
+            ICollection itemList = null;
+
+            if(lst.Count==1 && lst.GetType().BaseType==typeof(System.Array))
+            {
+                itemList = (ICollection)(lst as IList)[0];
+            }
+            else
+            {
+                itemList = lst;
+            }
+
+            foreach (var e in itemList)
             {
                 var type = e.GetType().BaseType.ToString();
                 var condition = type == "System.ValueType" ? obj.ToString() == e.ToString() : obj.GetHashCode() == e.GetHashCode();
@@ -2160,6 +2231,21 @@ namespace SimpleAssertThat
         public static Does NotHaveTotal(object operand)
         {
             return new Does(Operators.NotHaveTotal, operand);
+        }
+
+        public static Does HaveEachElementZero
+        {
+            get
+            {
+                return new Does(Operators.HaveEachElementZero, null);
+            }
+        }
+        public static Does HaveAnyElementZero
+        {
+            get
+            {
+                return new Does(Operators.HaveAnyElementZero, null);
+            }
         }
     }
 
