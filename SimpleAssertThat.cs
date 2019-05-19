@@ -284,13 +284,17 @@ namespace SimpleAssertThat
             {
                 TestItems = (x) =>
                 {
-                    if (x is IEnumerable)
+                    if (x is IEnumerable && !(x is String))
                         return ((IList<T>)x).Contains(val);
+                    else if(x is string)
+                        return x.ToString().Contains(val.ToString());
                     else return false;
                 },
                 TestItem = (x) =>
                 {
-                    if (!(x is IEnumerable))
+                    if (!(x is IEnumerable) && !(x is string))
+                        return x.ToString().Contains(val.ToString());
+                    else if (x is string)
                         return x.ToString().Contains(val.ToString());
                     else return false;
                 }
@@ -303,14 +307,18 @@ namespace SimpleAssertThat
             {
                 TestItems = (x) =>
                 {
-                    if (x is IEnumerable)
+                    if (!(x is IEnumerable) && !(x is string))
                         return !((IList<T>)x).Contains(val);
+                    else if (x is string)
+                        return !(x.ToString().Contains(val.ToString()));
                     else return false;
                 },
                 TestItem = (x) =>
                 {
-                    if (!(x is IEnumerable))
+                    if (!(x is IEnumerable) && !(x is string))
                         return !x.ToString().Contains(val.ToString());
+                    else if (x is string)
+                        return !(x.ToString().Contains(val.ToString()));
                     else return false;
                 }
             };
