@@ -8,7 +8,7 @@ Install SimpleAssertThat from nuget package manager.
 
 ## Step 3: 
 Add a class with TestClass attribute and a method with TestMethod attribute as shown below.
-```
+```csharp
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimpleAssertThat;
