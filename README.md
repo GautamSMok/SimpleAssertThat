@@ -1,5 +1,7 @@
 # SimpleAssertThat
 A Simple, Small Assert.That unit testing tool for .Net projects.
+#### SimpleAssertThat framework is compatible with MS Unit Test. Here is an example
+https://github.com/GautamSMok/SimpleAssertThat/blob/master/MSUnitTestsCompatible.md
 
 Get started with the youtube tutorial : https://www.youtube.com/watch?v=pgf_RGx0VaU
 
