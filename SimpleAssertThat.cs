@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,18 +12,25 @@ namespace SimpleAssertThat
 {
     public static class Assert
     {
-        public static int TotalPassed{get;set;}
+        public static int TotalPassed { get; set; }
         public static int TotalFailed { get; set; }
         public static bool ThrowExceptionOnFalse { get; set; }
+        private static bool MSUnitTestingCompatible { get; set; }
 
         static Assert()
         {
             TotalFailed = TotalPassed = 0;
+            MSUnitTestingCompatible = false;
+        }
+
+        public static void SetMSUnitTestingCompatibility()
+        {
+            MSUnitTestingCompatible = true;
         }
 
         public static void Summary()
         {
-            Console.WriteLine("Total Tests : " + (TotalPassed+TotalFailed) + "    Passed : " + TotalPassed+"   Failed: "+ TotalFailed);
+            Console.WriteLine("Total Tests : " + (TotalPassed + TotalFailed) + "    Passed : " + TotalPassed + "   Failed: " + TotalFailed);
         }
 
         public static void Reset()
@@ -56,7 +64,7 @@ namespace SimpleAssertThat
         private static string GetResult(bool result, string values, System.Reflection.MethodInfo methodInfo, object target)
         {
             StringBuilder resultToDisplay = new StringBuilder();
-            resultToDisplay.Append(result==true ? "Passed" : "Failed");
+            resultToDisplay.Append(result == true ? "Passed" : "Failed");
             resultToDisplay.Append(" : ");
             resultToDisplay.Append(values);
             resultToDisplay.Append(" ");
@@ -82,9 +90,9 @@ namespace SimpleAssertThat
             WriteMessage(display);
         }
 
-        private static bool CheckResult(bool p,string message)
+        private static bool CheckResult(bool p, string message)
         {
-            if(p)
+            if (p)
             {
                 TotalPassed++;
             }
@@ -92,14 +100,20 @@ namespace SimpleAssertThat
             {
                 TotalFailed++;
             }
-            if(ThrowExceptionOnFalse && !p)
+            if (MSUnitTestingCompatible && !p)
             {
-                throw new Exception(message);
+                throw new AssertFailedException(message);
             }
             else
-            {
-                return p;
-            }
+                if (ThrowExceptionOnFalse && !p)
+                {
+
+                    throw new Exception(message);
+                }
+                else
+                {
+                    return p;
+                }
 
         }
 
@@ -118,15 +132,15 @@ namespace SimpleAssertThat
             var values = GetTestValue(source);
 
             var display = GetResult(result, values, test.TestItems.Method, test.TestItems.Target);
-            
-            CheckResult(result,display);
+
+            CheckResult(result, display);
             WriteMessage(display);
         }
 
         public static void That<T>(T source, ITest<T> test)
         {
-            bool result =  test.TestParameters != null ? test.TestParameters(source) : test.TestItem(source);
-            
+            bool result = test.TestParameters != null ? test.TestParameters(source) : test.TestItem(source);
+
             var value = GetTestValue(source);
             var display = test.TestParameters != null ?
                 GetResult(result, value, test.TestParameters.Method, test.TestParameters.Target)
@@ -136,7 +150,13 @@ namespace SimpleAssertThat
             WriteMessage(display);
         }
 
-       
+        public static void That(bool result)
+        {
+            var display = result == true ? "Passed : " + "Expression evaluates to true" : "Failed : " + "Expression does not evaluate to true";
+            CheckResult(result, display);
+            WriteMessage(display);
+        }
+
 
         private static string GetTestValue<T>(T val)
         {
@@ -286,7 +306,7 @@ namespace SimpleAssertThat
                 {
                     if (x is IEnumerable && !(x is String))
                         return ((IList<T>)x).Contains(val);
-                    else if(x is string)
+                    else if (x is string)
                         return x.ToString().Contains(val.ToString());
                     else return false;
                 },
@@ -419,16 +439,16 @@ namespace SimpleAssertThat
             return new ITest<object>()
             {
                 TestItem = (x) =>
-                 {
-                     if (x is IEnumerable && !(x is System.String))
-                         return ((IList)x).Count == targetValue;
-                     if (!(x is IEnumerable))
-                         return x.ToString().Length == targetValue;
-                     if (x is string)
-                         return x.ToString().Length == targetValue;
+                {
+                    if (x is IEnumerable && !(x is System.String))
+                        return ((IList)x).Count == targetValue;
+                    if (!(x is IEnumerable))
+                        return x.ToString().Length == targetValue;
+                    if (x is string)
+                        return x.ToString().Length == targetValue;
 
-                     else return false;
-                 }
+                    else return false;
+                }
             };
         }
 
@@ -586,10 +606,874 @@ namespace SimpleAssertThat
             return (x) => x.ToString() != targetValue.ToString();
         }
 
+        public static ITest<T> HaveEachElementEqualTo<T>(T value)
+        {
+            return new ITest<T>
+            {
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => a.ToString() == value.ToString()));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString() == value.ToString()));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => a.ToString() == value.ToString()));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString() == value.ToString()));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementEqualTo<T>(T value)
+        {
+            return new ITest<T>
+            {
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => a.ToString() == value.ToString()));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString() == value.ToString()));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => a.ToString() == value.ToString()));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString() == value.ToString()));
+                    }
+                },
+
+
+            };
+        }
+
+        public static ITest<T> HaveTotal<T>(T total)
+        {
+            return new ITest<T>
+            {
+                TestItems = (x) =>
+                {
+
+                    return GetTotal(((IList<T>)x)) == Convert.ToDecimal(total.ToString());
+
+
+                },
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveTotal<T>(T total)
+        {
+            return new ITest<T>
+            {
+                TestItems = (x) =>
+                {
+
+                    return !(GetTotal(((IList<T>)x)) == Convert.ToDecimal(total.ToString()));
+
+
+                },
+
+            };
+
+        }
+
+        public static ITest<object> HaveAverage(double average)
+        {
+            return new ITest<object>
+            {
+                TestItem = (x) =>
+                {
+                    var lst = ((IList)x);
+
+
+                    return GetAverage(((IList)x)) == Convert.ToDecimal(average.ToString());
+
+
+                },
+
+
+            };
+
+        }
+
+        public static ITest<object> NotHaveAverage(double average)
+        {
+            return new ITest<object>
+            {
+                TestItem = (x) =>
+                {
+                    var lst = ((IList)x);
+
+
+                    return GetAverage(((IList)x)) != Convert.ToDecimal(average.ToString());
+
+
+                },
+
+
+            };
+
+        }
+
+        private static decimal GetAverage(IList list)
+        {
+            Decimal total = 0M;
+
+            foreach (var item in list)
+            {
+                total += Convert.ToDecimal(item.ToString());
+            }
+
+            return total / list.Count;
+        }
+
+        private static decimal GetTotal<T>(IList<T> list)
+        {
+            Decimal total = 0M;
+
+            list.ToList().ForEach(x =>
+                total += Convert.ToDecimal(x.ToString())
+                );
+
+            return total;
+        }
+
+        public static ITest<T> HaveEachElementGreaterThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementGreaterThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveEachElementGreaterThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementGreaterThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveEachElementLesserThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementLesserThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveEachElementLesserThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementLesserThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        //Any
+        public static ITest<T> HaveAnyElementGreaterThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveAnyElementGreaterThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) > Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) > 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveAnyElementGreaterThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveAnyElementGreaterThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) >= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveAnyElementLesserThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveAnyElementLesserThan<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) < Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) < 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveAnyElementLesserThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return (x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveAnyElementLesserThanOrEqualTo<T>(T value)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).Any(a => Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(value.ToString())));
+                    }
+                    else
+                    {
+                        return !(x.ToString().Any(c => c.ToString().CompareTo(value.ToString()) <= 0));
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> HaveEachElementBetween<T>(T start, T end)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a =>
+                            (Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(start.ToString()))
+                            &&
+                            (Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(end.ToString()))));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c =>
+                            (c.ToString().CompareTo(start.ToString()) >= 0)
+                            &&
+                             (c.ToString().CompareTo(end.ToString()) <= 0))
+                             );
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return (((IList<T>)x).All(a =>
+                            (Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(start.ToString()))
+                            &&
+                            (Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(end.ToString()))));
+                    }
+                    else
+                    {
+                        return (x.ToString().All(c =>
+                            (c.ToString().CompareTo(start.ToString()) >= 0)
+                            &&
+                             (c.ToString().CompareTo(end.ToString()) <= 0))
+                             );
+                    }
+                },
+
+
+            };
+
+        }
+
+        public static ITest<T> NotHaveEachElementBetween<T>(T start, T end)
+        {
+
+            return new ITest<T>
+            {
+
+                TestItem = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a =>
+                            (Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(start.ToString()))
+                            &&
+                            (Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(end.ToString()))));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c =>
+                            (c.ToString().CompareTo(start.ToString()) >= 0)
+                            &&
+                             (c.ToString().CompareTo(end.ToString()) <= 0))
+                             );
+                    }
+                },
+
+                TestItems = (x) =>
+                {
+                    if (x is IList<T> && !(x is String))
+                    {
+                        return !(((IList<T>)x).All(a =>
+                            (Convert.ToDecimal(a.ToString()) >= Convert.ToDecimal(start.ToString()))
+                            &&
+                            (Convert.ToDecimal(a.ToString()) <= Convert.ToDecimal(end.ToString()))));
+                    }
+                    else
+                    {
+                        return !(x.ToString().All(c =>
+                            (c.ToString().CompareTo(start.ToString()) >= 0)
+                            &&
+                             (c.ToString().CompareTo(end.ToString()) <= 0))
+                             );
+                    }
+                },
+
+
+            };
+
+        }
     }
 
     public class Is
     {
+
+        public static Predicate<object> GenericType
+        {
+            get
+            {
+                return (x) => x.GetType().IsGenericType;
+            }
+        }
+
+        public static Predicate<object> NotGenericType
+        {
+            get
+            {
+                return (x) => !(x.GetType().IsGenericType);
+            }
+        }
+
+        public static Predicate<int> Even
+        {
+            get
+            {
+                return x => x % 2 == 0;
+            }
+        }
+
+        public static Predicate<int> Odd
+        {
+            get
+            {
+                return x => x % 2 != 0;
+            }
+        }
+
+        public static Predicate<object> Array
+        {
+            get
+            {
+                return (x) => x.GetType().IsArray;
+            }
+        }
+        public static Predicate<object> NotArray
+        {
+            get
+            {
+                return (x) => !(x.GetType().IsArray);
+            }
+        }
+
         public static Predicate<object> Date
         {
             get
@@ -603,7 +1487,7 @@ namespace SimpleAssertThat
             get
             {
                 DateTime dt;
-                return (x) =>!(DateTime.TryParse(x.ToString(), out dt));
+                return (x) => !(DateTime.TryParse(x.ToString(), out dt));
             }
         }
 
@@ -626,7 +1510,7 @@ namespace SimpleAssertThat
                 return (x) =>
                 {
                     return x.GetType().IsValueType;
-                   
+
                 };
             }
         }
@@ -1176,6 +2060,46 @@ namespace SimpleAssertThat
             }
         }
 
+        public static Predicate<object> WholeNumber
+        {
+            get
+            {
+                return x => x.GetType().FullName == typeof(Int32).FullName
+                    || x.GetType().FullName == typeof(Int16).FullName
+                    || x.GetType().FullName == typeof(UInt16).FullName
+                    || x.GetType().FullName == typeof(UInt32).FullName
+                    || x.GetType().FullName == typeof(UInt64).FullName
+                     || x.GetType().FullName == typeof(long).FullName
+                    || x.GetType().FullName == typeof(Int64).FullName;
+            }
+        }
+
+        public static Predicate<object> NotWholeNumber
+        {
+            get
+            {
+                return x => !(WholeNumber(x));
+            }
+        }
+
+        public static Predicate<object> RealNumber
+        {
+            get
+            {
+                return x => NotWholeNumber(x) && x.GetType().FullName == typeof(double).FullName
+                    || x.GetType().FullName == typeof(decimal).FullName
+                    || x.GetType().FullName == typeof(float).FullName;
+            }
+        }
+
+        public static Predicate<object> NotRealNumber
+        {
+            get
+            {
+                return x => !(RealNumber(x));
+            }
+        }
+
         public static Predicate<Decimal> NotZero
         {
             get
@@ -1375,11 +2299,11 @@ namespace SimpleAssertThat
                     object magicValue = method.Invoke(instance, parameters);
                     return magicValue == null ? "null" : magicValue;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     return ex;
                 }
-                
+
             }
 
             return null;
