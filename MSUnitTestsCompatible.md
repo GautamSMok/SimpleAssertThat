@@ -1,12 +1,12 @@
 How to use SimpleAssertThat with Microsoft's Unit Test Projects
 
-**Step 1: 
+** Step 1: 
 Create new Microsoft Unit Test Project in Visual Studio
 
-**Step 2:
+** Step 2:
 Install SimpleAssertThat from nuget package manager.
 
-**Step 3: 
+** Step 3: 
 Add a class with TestClass attribute and a method with TestMethod attribute as shown below.
 ```
 using System;
@@ -26,5 +26,5 @@ namespace UnitTestProject2
     }
 }
 ```
-![MS Unit Tests with SimpleAssertThat](MSUTest.png)
+![MS Unit Tests with SimpleAssertThat](https://github.com/GautamSMok/SimpleAssertThat/blob/master/MSUTest.PNG)
 
