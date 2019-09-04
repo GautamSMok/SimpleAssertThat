@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace SimpleAssertThat
 {
-    public static class Assert
+    public static class Test
     {
         public static int TotalPassed { get; set; }
         public static int TotalFailed { get; set; }
         public static bool ThrowExceptionOnFalse { get; set; }
         private static bool MSUnitTestingCompatible { get; set; }
 
-        static Assert()
+        static Test()
         {
             TotalFailed = TotalPassed = 0;
             MSUnitTestingCompatible = false;
@@ -79,16 +79,7 @@ namespace SimpleAssertThat
             return resultToDisplay.ToString();
         }
 
-        public static void That<T>(T source, Predicate<T> predicate)
-        {
-            var result = predicate(source);
-            var values = GetTestValue(source);
-
-            var display = GetResult(result, values, predicate.Method, predicate.Target);
-
-            CheckResult(result, display);
-            WriteMessage(display);
-        }
+        
 
         private static bool CheckResult(bool p, string message)
         {
@@ -103,6 +94,7 @@ namespace SimpleAssertThat
             if (MSUnitTestingCompatible && !p)
             {
                 throw new AssertFailedException(message);
+                //return false;
             }
             else
                 if (ThrowExceptionOnFalse && !p)
@@ -125,7 +117,18 @@ namespace SimpleAssertThat
             }
         }
 
-        public static void That<T>(IList<T> source, ITest<T> test)
+        public static void That<T>(T source, Predicate<T> predicate, string message = null)
+        {
+            var result = predicate(source);
+            var values = GetTestValue(source);
+
+            var display = GetResult(result, values, predicate.Method, predicate.Target);
+
+            CheckResult(result, message != null ? message : display);
+            WriteMessage(display);
+        }
+
+        public static void That<T>(IList<T> source, ITest<T> test,string message = null)
         {
 
             var result = test.TestItems(source);
@@ -133,11 +136,11 @@ namespace SimpleAssertThat
 
             var display = GetResult(result, values, test.TestItems.Method, test.TestItems.Target);
 
-            CheckResult(result, display);
+            CheckResult(result, message != null ? message : display);
             WriteMessage(display);
         }
 
-        public static void That<T>(T source, ITest<T> test)
+        public static void That<T>(T source, ITest<T> test, string message = null)
         {
             bool result = test.TestParameters != null ? test.TestParameters(source) : test.TestItem(source);
 
@@ -146,13 +149,13 @@ namespace SimpleAssertThat
                 GetResult(result, value, test.TestParameters.Method, test.TestParameters.Target)
                 : GetResult(result, value, test.TestItem.Method, test.TestItem.Target);
 
-            CheckResult(result, display);
+            CheckResult(result, message!=null ? message : display);
             WriteMessage(display);
         }
 
-        public static void That(bool result)
+        public static void That(bool result,string message=null)
         {
-            var display = result == true ? "Passed : " + "Expression evaluates to true" : "Failed : " + "Expression does not evaluate to true";
+            var display = result == true ? "Passed : " + "Expression evaluates to true" : "Failed : " + message!=null ? message : "Expression does not evaluate to true";
             CheckResult(result, display);
             WriteMessage(display);
         }
